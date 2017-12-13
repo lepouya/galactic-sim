@@ -1,0 +1,60 @@
+{
+  "name": "galactic-sim",
+  "version": "0.0.1",
+  "description": "My sandbox for making a space simulator",
+  "main": "./dist/galactic-sim.js",
+  "scripts": {
+    "start": "gulp watch",
+    "debug": "gulp debug",
+    "release": "gulp release",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lepouya/galactic-sim.git"
+  },
+  "author": "Pouya Larjani",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/lepouya/galactic-sim/issues"
+  },
+  "homepage": "https://github.com/lepouya/galactic-sim#readme",
+  "devDependencies": {
+    "@types/moment": "^2.13.0",
+    "@types/ramda": "^0.25.8",
+    "@types/random-js": "^1.0.30",
+    "@types/react": "^16.0.29",
+    "@types/react-dom": "^16.0.3",
+    "@types/react-router": "^4.0.19",
+    "@types/react-router-dom": "^4.2.3",
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browserify": "^14.5.0",
+    "foundation-sites": "^6.4.4-rc1",
+    "gulp": "^3.9.1",
+    "gulp-cli": "^1.4.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.6.1",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.1",
+    "gulp-typescript": "^3.2.3",
+    "gulp-uglify": "^3.0.0",
+    "gulp-util": "^3.0.8",
+    "tsify": "^3.0.4",
+    "typescript": "^2.6.2",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
+  },
+  "dependencies": {
+    "moment": "^2.19.4",
+    "ramda": "^0.25.0",
+    "random-js": "^1.0.8",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-router": "^4.2.0",
+    "react-router-dom": "^4.2.2"
+  }
+}
