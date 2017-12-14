@@ -1,6 +1,5 @@
 var gulp = require('gulp');
 var gutil = require('gulp-util');
-var replace = require('gulp-replace');
 var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
 var tsify = require('tsify');
@@ -9,12 +8,13 @@ var browserify = require('browserify');
 var uglify = require('gulp-uglify');
 var watchify = require('watchify');
 var sass = require('gulp-sass');
+var pug = require('gulp-pug');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
 const package = 'galactic-sim';
 const outDir = 'dist';
-const htmlEntries = ['src/index.html'];
+const htmlEntries = ['src/index.pug'];
 const cssEntries = ['src/index.scss'];
 const jsEntries = ['src/index.tsx'];
 const extensions = ['.js', '.ts', '.jsx', '.tsx', '.json'];
@@ -38,8 +38,13 @@ gulp.task('html', function () {
   
   return gulp
     .src(htmlEntries)
-    .pipe(replace('{JS-SOURCE}', jsName))
-    .pipe(replace('{CSS-SOURCE}', cssName))
+    .pipe(pug({
+      pretty: debug,
+      locals: {
+        jsSource: jsName,
+        cssSource: cssName,
+      }
+    }))
     .pipe(gulp.dest(outDir));
 });
 
@@ -52,6 +57,7 @@ gulp.task('sass', function () {
     .pipe(sass({
       includePaths: ['node_modules/foundation-sites/scss'],
       outputStyle: (debug ? 'expanded' : 'compressed'),
+      outFile: cssName,
     }))
     .pipe(rename(cssName))
     .pipe(gulp.dest(outDir));
