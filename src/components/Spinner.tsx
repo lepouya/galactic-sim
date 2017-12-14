@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Spinner: React.SFC = () => {
+const Spinner: React.SFC = () => {
   const style = {
     background: "none",
   }
