@@ -1,0 +1,65 @@
+Milestone 1
+[x] Project skeleton and build system
+[x] Vectors in Cartesian and Spherical coordinates
+  [ ] Tests
+[ ] Definition of bodies in space
+[ ] Orbital calculations
+  [ ] Tests
+[ ] 3-body simulations and calculations
+  [ ] Tests
+[ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
+  [ ] Tests
+[ ] World state and global clock
+[ ] Debug reporting console
+
+Milestone 2
+[ ] 3D rendering of a scene
+[ ] Time warping
+[ ] Switching between orbital predictions and simulations
+
+Milestone 3
+[ ] Non-gravitational objects
+[ ] Collision detection
+[ ] Switching spheres of influence
+[ ] Acceleration of NGOs, orbit switching
+
+Milestone 4
+[ ] Resources
+[ ] Usage of propellant and mass changes
+[ ] Staging
+
+Milestone 5
+[ ] Control of directions[pitch/yaw/roll] and headings[grades/normals/radials]
+[ ] Throttle control
+[ ] Landing (non crash)
+
+Milestone 6
+[ ] Uneven planetary surfaces
+[ ] Atmosphere and pressure
+[ ] Temperature and heat control
+
+Milestone 7
+[ ] Parts and craft customization
+[ ] Other usable resources
+[ ] Resource generation/conversion
+
+Milestone 8
+[ ] Aerodynamics
+[ ] Craft builder
+
+Milestone 9
+[ ] Rovers
+[ ] Surface operations
+
+Milestone 10
+[ ] Tech tree
+
+Milestone 11
+[ ] Advanced aerodynamics
+[ ] Planes
+
+Milestone 12+
+[ ] Docking
+[ ] Life support / people
+[ ] Future tech
+...
