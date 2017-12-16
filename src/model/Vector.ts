@@ -93,11 +93,24 @@ export default abstract class Vector {
     return approximately.zero(this.convertTo(Vector.Cartesian).z);
   }
 
+  toCartesian() {
+    return this.convertTo(CoordinateSystem.Cartesian);
+  }
+
+  toCylindrical() {
+    return this.convertTo(CoordinateSystem.Cylindrical);
+  }
+
+  toSpherical() {
+    return this.convertTo(CoordinateSystem.Spherical);
+  }
+
   private _verifyAndReturn<T>(v: T, cs1: CoordinateSystem, cs2?: CoordinateSystem) {
     if (this.coordinateSystem == cs1 || this.coordinateSystem == cs2) {
       return v;
+    } else {
+      return NaN;
     }
-    throw new Error("Wrong coordinate type.");
   }
 
   get x() { return this._verifyAndReturn(this.c1, Vector.Cartesian); }
