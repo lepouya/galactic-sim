@@ -9,6 +9,7 @@ var uglify = require('gulp-uglify');
 var watchify = require('watchify');
 var sass = require('gulp-sass');
 var pug = require('gulp-pug');
+var connect = require('gulp-connect');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
@@ -20,15 +21,16 @@ const jsEntries = ['src/index.tsx'];
 const extensions = ['.js', '.ts', '.jsx', '.tsx', '.json'];
 
 gulp.task('prod', function () {
-  return process.env.NODE_ENV = 'production';
+  process.env.NODE_ENV = 'production';
 });
 
 gulp.task('dev', function () {
-  return process.env.NODE_ENV = 'development';
+  process.env.NODE_ENV = 'development';
 });
 
 gulp.task('watching', function () {
-  return process.env.watching = true;
+  process.env.NODE_ENV = 'development';
+  process.env.watching = true;
 });
 
 gulp.task('html', function () {
@@ -67,9 +69,20 @@ gulp.task('ts', function () {
   return bundle();
 });
 
-gulp.task('release', ['prod', 'html', 'sass', 'ts'], function () {});
-gulp.task('debug', ['dev', 'html', 'sass', 'ts'], function () {});
-gulp.task('watch', ['dev', 'watching', 'html', 'ts'], function () {});
+gulp.task('server', function () {
+  connect.server({
+    name: package,
+    root: outDir,
+    port: 8080,
+    livereload: true,
+  });
+});
+
+gulp.task('compile', ['html', 'sass', 'ts'], function () {});
+gulp.task('release', ['prod', 'compile'], function () {});
+gulp.task('debug', ['dev', 'compile'], function () {});
+gulp.task('watch', ['watching', 'compile'], function () {});
+gulp.task('start', ['watch', 'server'], function () {});
 
 var bundler = null;
 
@@ -119,5 +132,6 @@ function bundle() {
   }
 
   return fs
-    .pipe(gulp.dest(outDir));
+    .pipe(gulp.dest(outDir))
+    .pipe(connect.reload());
 }
