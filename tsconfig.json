@@ -4,12 +4,12 @@
     "src/**/*.tsx"
   ],
   "exclude": [
+    "src/**/__tests__/*",
     "node_modules",
     "dist"
   ],
   "compilerOptions": {
     "target": "ES5",
-    "module": "ESNext",
     "lib": ["DOM", "ESNext"],
     "allowJs": true,
     "jsx": "react",

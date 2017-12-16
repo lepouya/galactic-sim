@@ -7,7 +7,7 @@
     "start": "gulp watch",
     "debug": "gulp debug",
     "release": "gulp release",
-    "test": "test"
+    "test": "mocha -r ts-node/register --reporter spec src/**/*Test.ts"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,8 @@
   },
   "homepage": "https://github.com/lepouya/galactic-sim#readme",
   "devDependencies": {
+    "@types/chai": "^4.0.10",
+    "@types/mocha": "^2.2.44",
     "@types/moment": "^2.13.0",
     "@types/ramda": "^0.25.8",
     "@types/random-js": "^1.0.30",
@@ -32,6 +34,7 @@
     "babel-preset-react": "^6.24.1",
     "babelify": "^8.0.0",
     "browserify": "^14.5.0",
+    "chai": "^4.1.2",
     "foundation-sites": "^6.4.4-rc1",
     "gulp": "^3.9.1",
     "gulp-cli": "^1.4.0",
@@ -42,6 +45,8 @@
     "gulp-typescript": "^3.2.3",
     "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.8",
+    "mocha": "^4.0.1",
+    "ts-node": "^4.0.2",
     "tsify": "^3.0.4",
     "typescript": "^2.6.2",
     "vinyl-buffer": "^1.0.0",
