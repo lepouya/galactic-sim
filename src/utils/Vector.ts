@@ -36,6 +36,8 @@ export default abstract class Vector {
     return new SphericalVector(rho, theta, phi);
   }
 
+  static origin = Vector.spherical();
+
   static Cartesian = CoordinateSystem.Cartesian;
   static Cylindrical = CoordinateSystem.Cylindrical;
   static Polar = CoordinateSystem.Polar;
