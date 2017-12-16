@@ -1,6 +1,6 @@
-import Vector from '../utils/Vector';
+import Vector from './Vector';
 
-export const G = 6.67408e-11; // [m^3/kg/s^2]
+export const G = 6.67408e-11; // Gravitational constant, [m^3/kg/s^2]
 
 export default class Body {
   constructor(
@@ -9,10 +9,10 @@ export default class Body {
     public name = id,     // Display name of this body
     public parent?: Body, // Bodies with no parent use absolute coordinates
 
-    public position = Vector.origin,   // Center of body relative to parent position; [m]
-    public velocity = Vector.origin,   // Motion of body relative to parent position, [m/s]
-    public axis = Vector.spherical(1), // Main axis relative to parent axis, normalized
-    public spin = Vector.origin,       // Angular momentum relative to body's axis, [rad/s][ccw]
+    public position = Vector.spherical(), // Center of body relative to parent position; [m]
+    public velocity = Vector.spherical(), // Motion of body relative to parent position, [m/s]
+    public axis = Vector.spherical(1),    // Main axis relative to parent axis, normalized
+    public spin = Vector.spherical(),     // Angular momentum relative to body's axis, [rad/s][ccw]
 
     public mass = 0,   // Inertial mass, [kg]
     public radius = 0, // Distance of surface from body's position, [m]

@@ -1,3 +1,5 @@
+import approximately from '../utils/approximately';
+
 export enum CoordinateSystem {
   Cartesian = 0,
   Cylindrical = 1,
@@ -5,11 +7,7 @@ export enum CoordinateSystem {
   Spherical = 2,
 }
 
-const equalityThreshold = 1.0e-3;
 const halfPi = Math.PI / 2.0;
-
-const isCloseTo = (a: number, b: number) => Math.abs(a - b) < equalityThreshold;
-const isAlmostZero = (a: number) => isCloseTo(a, 0.0);
 const mag = (a: number, b: number, c: number = 0.0) => Math.sqrt(a * a + b * b + c * c);
 
 export default abstract class Vector {
@@ -35,8 +33,6 @@ export default abstract class Vector {
   static spherical(rho: number = 0.0, theta: number = 0.0, phi: number = 0.0): Vector {
     return new SphericalVector(rho, theta, phi);
   }
-
-  static origin = Vector.spherical();
 
   static Cartesian = CoordinateSystem.Cartesian;
   static Cylindrical = CoordinateSystem.Cylindrical;
@@ -90,11 +86,11 @@ export default abstract class Vector {
   }
 
   isOrigin() {
-    return isAlmostZero(this.magnitude());
+    return approximately.zero(this.magnitude());
   }
 
   isFlat() {
-    return isAlmostZero(this.convertTo(Vector.Cartesian).z);
+    return approximately.zero(this.convertTo(Vector.Cartesian).z);
   }
 
   private _verifyAndReturn<T>(v: T, cs1: CoordinateSystem, cs2?: CoordinateSystem) {
