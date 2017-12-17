@@ -1,12 +1,13 @@
 Milestone 1
 [x] Project skeleton and build system
 [x] Vectors in Cartesian and Spherical coordinates
+  [x] Tests
+[x] Definition of bodies in space
+[ ] N-body simulations and calculations
   [ ] Tests
-[ ] Definition of bodies in space
 [ ] Orbital calculations
   [ ] Tests
-[ ] 3-body simulations and calculations
-  [ ] Tests
+[ ] Angular momentum calculations
 [ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
   [ ] Tests
 [ ] World state and global clock
