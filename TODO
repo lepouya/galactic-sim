@@ -1,7 +1,7 @@
 Milestone 1
 [x] Project skeleton and build system
 [x] Definition of bodies in space
-[ ] N-body simulations and calculations
+[x] N-body simulations and calculations
 [ ] Angular momentum calculations
 [ ] Orbital calculations
 [ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking

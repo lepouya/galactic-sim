@@ -3,6 +3,6 @@ export default class approximately {
 
   static zero = (a: number) => Math.abs(a) < approximately.threshold;
 
-  static is = (a: number, b: number) => Math.abs(a - b) < approximately.threshold;
-  static isNot = (a: number, b: number) => Math.abs(a - b) >= approximately.threshold;
+  static equal = (a: number, b: number) => Math.abs(a - b) < approximately.threshold;
+  static notEqual = (a: number, b: number) => Math.abs(a - b) >= approximately.threshold;
 }

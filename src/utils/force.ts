@@ -1,9 +1,9 @@
-import { Vector3 } from "three";
+import { Vector3 } from 'three';
 
 /**
  * Force in Newtonian physics
  */
-export default class force {
+export default abstract class force {
   /**
    * Gravitational constant, [m^3/kg/s^2]
    */
