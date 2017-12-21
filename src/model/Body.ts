@@ -74,7 +74,7 @@ export default class Body {
     this._axis = axis.clone().normalize();
     this.axisAbsolute = this._axis.clone();
     if (this._parent) {
-      this.axisAbsolute = this.axisAbsolute.applyAxisAngle(this._parent.axisNormal, this._parent.axisAngle);
+      this.axisAbsolute.applyAxisAngle(this._parent.axisNormal, this._parent.axisAngle);
     }
 
     const up = new Vector3(0, 1, 0);
@@ -111,17 +111,15 @@ export default class Body {
     this.lastUpdated = now;
 
     // Force due to current velocity vector
-    let m = force.find(this.mass, this.velocity.length(), dt);
-    let f = this.velocity.clone().setLength(m);
+    let f = force.find(this.mass, this.velocity, dt);
 
     // Gravity of parent
     if (level >= Body.SimulationLevel.TwoBody && this._parent) {
-      let g = force.gravity(this._parent.mass, this.mass, this.position.length());
-      f = f.add(this.position.clone().negate().setLength(g));
+      f.add(force.gravity(this._parent.mass, this.mass, this.position));
     }
 
     // Apply the motion
-    f = f.setLength(force.apply(f.length(), this.mass, dt));
+    f = force.apply(f, this.mass, dt);
     this.position = this.position.add(f);
 
     // Set the new velocity vector
