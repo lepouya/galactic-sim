@@ -14,10 +14,10 @@ export default class force {
    * @param m1 Mass of first object [kg]
    * @param m2 Mass of second object [kg]
    * @param d  Distance vector from first object to second [m]
-   * @returns  Gravitational force that applies to second object from first [N]
+   * @returns  Gravitational force that applies to first object from second [N]
    */
   static gravity(m1: number, m2: number, d: Vector3): Vector3 {
-    return d.clone().negate().setLength(force.G * m1 * m2 / d.lengthSq());
+    return d.setLength(force.G * m1 * m2 / d.lengthSq());
   }
 
   /**
@@ -28,7 +28,7 @@ export default class force {
    * @returns  Displacement vector of the object [m]
    */
   static apply(f: Vector3, m: number, dt: number): Vector3 {
-    return f.clone().multiplyScalar(0.5 / m * (dt ** 2));
+    return f.multiplyScalar(0.5 / m * (dt ** 2));
   }
 
   /**
@@ -39,6 +39,6 @@ export default class force {
    * @returns  The force that needs to be applied to the object to reach desired speed [N]
    */
   static find(m: number, v: Vector3, dt: number): Vector3 {
-    return v.clone().multiplyScalar(2.0 * m / dt);
+    return v.multiplyScalar(2.0 * m / dt);
   }
 }

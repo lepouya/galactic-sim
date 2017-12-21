@@ -82,15 +82,21 @@ export default class Body {
     this.axisAngle = up.angleTo(this.axisAbsolute);
   }
 
-  getAbsolutePosition(): Vector3 {
+  getAbsolutePosition(posCache?: Map<string, Vector3>): Vector3 {
+    if (posCache && posCache.has(this.id)) {
+      return posCache.get(this.id)!;
+    }
+
     let pos = this.position.clone();
 
     if (this._parent) {
-      pos = pos
-        .applyAxisAngle(this._parent.axisNormal, this._parent.axisAngle)
-        .add(this._parent.getAbsolutePosition());
+      pos.applyAxisAngle(this._parent.axisNormal, this._parent.axisAngle)
+        .add(this._parent.getAbsolutePosition(posCache));
     }
 
+    if (posCache) {
+      posCache.set(this.id, pos);
+    }
     return pos;
   }
 
@@ -102,7 +108,7 @@ export default class Body {
     AllBodies:  5, // + Gravity of siblings and uncles
   }
 
-  simulate(now: number, level: number) {
+  simulate(now: number, level: number, posCache?: Map<string, Vector3>) {
     // Find the delta-t and whether it's been long enough to simulate
     const dt = now - this.lastUpdated;
     if (Math.abs(dt) < 0.001) {
@@ -110,12 +116,41 @@ export default class Body {
     }
     this.lastUpdated = now;
 
+    // Local position cache
+    if (!posCache) {
+      posCache = new Map<string, Vector3>();
+    }
+
     // Force due to current velocity vector
-    let f = force.find(this.mass, this.velocity, dt);
+    let f = force.find(this.mass, this.velocity.clone(), dt);
+
+    const addGravity = (b: Body) =>
+      f.add(force.gravity(b.mass, this.mass,
+        b.getAbsolutePosition(posCache).clone().sub(this.getAbsolutePosition(posCache))));
 
     // Gravity of parent
-    if (level >= Body.SimulationLevel.TwoBody && this._parent) {
-      f.add(force.gravity(this._parent.mass, this.mass, this.position));
+    if (level >= Body.SimulationLevel.TwoBody && this.parent) {
+      addGravity(this.parent);
+    }
+
+    // Gravity of grandparent
+    if (level >= Body.SimulationLevel.ThreeBody && this.parent && this.parent.parent) {
+      addGravity(this.parent.parent);
+    }
+
+    // Gravity of children
+    if (level >= Body.SimulationLevel.NBody) {
+      this.children.forEach(child => addGravity(child));
+    }
+
+    // Gravity of siblings
+    if (level >= Body.SimulationLevel.AllBodies && this.parent) {
+      this.parent.children.forEach(sibling => (sibling == this) || addGravity(sibling));
+    }
+
+    // Gravity of uncles
+    if (level >= Body.SimulationLevel.AllBodies && this.parent && this.parent.parent) {
+      this.parent.parent.children.forEach(uncle => (uncle == this.parent) || addGravity(uncle));
     }
 
     // Apply the motion
