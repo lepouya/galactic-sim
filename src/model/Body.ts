@@ -122,10 +122,10 @@ export default class Body {
     }
 
     // Force due to current velocity vector
-    let f = force.find(this.mass, this.velocity.clone(), dt);
+    let f = force.find(1, this.velocity.clone(), dt);
 
     const addGravity = (b: Body) =>
-      f.add(force.gravity(b.mass, this.mass,
+      f.add(force.gravity(b.mass, 1,
         b.getAbsolutePosition(posCache).clone().sub(this.getAbsolutePosition(posCache))));
 
     // Gravity of parent
@@ -154,7 +154,7 @@ export default class Body {
     }
 
     // Apply the motion
-    f = force.apply(f, this.mass, dt);
+    f = force.apply(f, 1, dt);
     this.position = this.position.add(f);
 
     // Set the new velocity vector

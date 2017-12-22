@@ -28,7 +28,7 @@ export default abstract class force {
    * @returns  Displacement vector of the object [m]
    */
   static apply(f: Vector3, m: number, dt: number): Vector3 {
-    return f.multiplyScalar(0.5 / m * (dt ** 2));
+    return f.multiplyScalar(dt ** 2 / m);
   }
 
   /**
@@ -39,6 +39,6 @@ export default abstract class force {
    * @returns  The force that needs to be applied to the object to reach desired speed [N]
    */
   static find(m: number, v: Vector3, dt: number): Vector3 {
-    return v.multiplyScalar(2.0 * m / dt);
+    return v.multiplyScalar(m / dt);
   }
 }

@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { Vector3 } from 'three';
 
 import Body from '../Body';
+import orbit from '../../utils/orbit';
 
 const pi = Math.PI;
 const expectVector =
@@ -258,13 +259,13 @@ describe('Gravitational force', () => {
     expectVector(body1.velocity, 0, 0, 0);
     expectVector(body1.getAbsolutePosition(), 0, 0, 0);
 
-    expectVector(body2.position, 967, 0, 0);
-    expectVector(body2.velocity, -33, 0, 0);
-    expectVector(body2.getAbsolutePosition(), 967, 0, 0);
+    expectVector(body2.position, 933, 0, 0);
+    expectVector(body2.velocity, -67, 0, 0);
+    expectVector(body2.getAbsolutePosition(), 933, 0, 0);
 
-    expectVector(body3.position, 7, 0, 0);
-    expectVector(body3.velocity, -3, 0, 0);
-    expectVector(body3.getAbsolutePosition(), 973, 0, 0);
+    expectVector(body3.position, 3, 0, 0);
+    expectVector(body3.velocity, -7, 0, 0);
+    expectVector(body3.getAbsolutePosition(), 937, 0, 0);
   });
 
   it('accelerated gravity', () => {
@@ -276,13 +277,13 @@ describe('Gravitational force', () => {
     body2.simulate(2, Body.SimulationLevel.TwoBody);
     body3.simulate(2, Body.SimulationLevel.TwoBody);
 
-    expectVector(body2.position, 898, 0, 0);
-    expectVector(body2.velocity, -69, 0, 0);
-    expectVector(body2.getAbsolutePosition(), 898, 0, 0);
+    expectVector(body2.position, 790, 0, 0);
+    expectVector(body2.velocity, -143, 0, 0);
+    expectVector(body2.getAbsolutePosition(), 790, 0, 0);
 
-    expectVector(body3.position, -4, 0, 0);
-    expectVector(body3.velocity, -11, 0, 0);
-    expectVector(body3.getAbsolutePosition(), 893, 0, 0);
+    expectVector(body3.position, -64, 0, 0);
+    expectVector(body3.velocity, -67, 0, 0);
+    expectVector(body3.getAbsolutePosition(), 726, 0, 0);
   });
 
   it('Oscillating gravity', () => {
@@ -298,35 +299,42 @@ describe('Gravitational force', () => {
     body2.simulate(3, Body.SimulationLevel.TwoBody);
     body3.simulate(3, Body.SimulationLevel.TwoBody);
 
-    expectVector(body2.position, 787, 0, 0);
-    expectVector(body2.velocity, -111, 0, 0);
-    expectVector(body2.getAbsolutePosition(), 787, 0, 0);
+    expectVector(body2.position, 540, 0, 0);
+    expectVector(body2.velocity, -250, 0, 0);
+    expectVector(body2.getAbsolutePosition(), 540, 0, 0);
 
-    expectVector(body3.position, 4, 0, 0);
-    expectVector(body3.velocity, 8, 0, 0);
-    expectVector(body3.getAbsolutePosition(), 791, 0, 0);
+    expectVector(body3.position, -131, 0, 0);
+    expectVector(body3.velocity, -67, 0, 0);
+    expectVector(body3.getAbsolutePosition(), 409, 0, 0);
 
     body1.simulate(4, Body.SimulationLevel.TwoBody);
     body2.simulate(4, Body.SimulationLevel.TwoBody);
     body3.simulate(4, Body.SimulationLevel.TwoBody);
 
-    expectVector(body3.position, -9, 0, 0);
-    expectVector(body3.velocity, -13, 0, 0);
+    expectVector(body3.position, -197, 0, 0);
+    expectVector(body3.velocity, -67, 0, 0);
   });
 
   it('Orbiting', () => {
     const orbitalDistance = 10;
-    const orbitalSpeed = 5.777;
+    const orbitalSpeed = 8.175;
     body3.position = new Vector3(orbitalDistance, 0, 0);
-    body3.velocity = new Vector3(0, orbitalSpeed, 0);
+    body3.velocity = new Vector3(0, 0, orbitalSpeed);
 
+    //console.log(JSON.stringify(orbit.fromState(body2.mass, body3.mass, body3.position, body3.velocity), null, 2));
     for (let i = 0; i < 100; i++) {
+      //console.log(`${i}s @ ${logB(body3)}`);
       for (let j = 0; j < 1000; j++) {
         body3.simulate(i + (j / 1000), Body.SimulationLevel.TwoBody);
       }
-      //console.log(`${i+1}s @${body3.position.length().toFixed(1)}m v=[${body3.velocity.length().toFixed(1)}]`);
       expect(body3.position.length()).to.be.approximately(orbitalDistance, 0.1);
       expect(body3.velocity.length()).to.be.approximately(orbitalSpeed, 0.1);
     }
   });
 });
+
+const tf = (n: number) => n.toFixed(1);
+const logV = (v: Vector3) => `[${tf(v.x)}, ${tf(v.y)}, ${tf(v.z)}]`;
+const logB = (b: Body) =>
+  `r=${logV(b.position)}, |r|=${tf(b.position.length())}; ` +
+  `v=${logV(b.velocity)}, |v|=${tf(b.velocity.length())}`;
