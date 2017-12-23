@@ -286,45 +286,24 @@ describe('Gravitational force', () => {
     expectVector(body3.getAbsolutePosition(), 726, 0, 0);
   });
 
-  it('Oscillating gravity', () => {
-    body1.simulate(1, Body.SimulationLevel.TwoBody);
-    body2.simulate(1, Body.SimulationLevel.TwoBody);
-    body3.simulate(1, Body.SimulationLevel.TwoBody);
-
-    body1.simulate(2, Body.SimulationLevel.TwoBody);
-    body2.simulate(2, Body.SimulationLevel.TwoBody);
-    body3.simulate(2, Body.SimulationLevel.TwoBody);
-
-    body1.simulate(3, Body.SimulationLevel.TwoBody);
-    body2.simulate(3, Body.SimulationLevel.TwoBody);
-    body3.simulate(3, Body.SimulationLevel.TwoBody);
-
-    expectVector(body2.position, 540, 0, 0);
-    expectVector(body2.velocity, -250, 0, 0);
-    expectVector(body2.getAbsolutePosition(), 540, 0, 0);
-
-    expectVector(body3.position, -131, 0, 0);
-    expectVector(body3.velocity, -67, 0, 0);
-    expectVector(body3.getAbsolutePosition(), 409, 0, 0);
-
-    body1.simulate(4, Body.SimulationLevel.TwoBody);
-    body2.simulate(4, Body.SimulationLevel.TwoBody);
-    body3.simulate(4, Body.SimulationLevel.TwoBody);
-
-    expectVector(body3.position, -197, 0, 0);
-    expectVector(body3.velocity, -67, 0, 0);
-  });
-
-  it('Orbiting', () => {
+  it('orbiting', () => {
     const orbitalDistance = 10;
-    const orbitalSpeed = 8.175;
+    const orbitalSpeed = 8.173;
     body3.position = new Vector3(orbitalDistance, 0, 0);
-    body3.velocity = new Vector3(0, 0, orbitalSpeed);
+    body3.velocity = new Vector3(0, orbitalSpeed / Math.sqrt(2), orbitalSpeed / Math.sqrt(2));
 
-    //console.log(JSON.stringify(orbit.fromState(body2.mass, body3.mass, body3.position, body3.velocity), null, 2));
-    for (let i = 0; i < 100; i++) {
-      //console.log(`${i}s @ ${logB(body3)}`);
+    //body3.velocity = new Vector3(0, 0, orbitalSpeed);
+    //let body4 = new Body('4', 0); body4.mass = body3.mass; body4.parent = body3.parent;
+
+    for (let i = 0; i < 10; i++) {
       for (let j = 0; j < 1000; j++) {
+        /*
+        if (j % 100 == 0) {
+          [body4.position, body4.velocity] = orbit.fromState(body2.mass, body3.mass, body3.position, body3.velocity).toState(body2.mass, body3.mass);
+          console.log(`t=${tf(i + j/1000)}, ${logB(body3)}`);
+          console.log(`  ---- ${logB(body4)}`);
+        }
+        */
         body3.simulate(i + (j / 1000), Body.SimulationLevel.TwoBody);
       }
       expect(body3.position.length()).to.be.approximately(orbitalDistance, 0.1);
@@ -335,6 +314,12 @@ describe('Gravitational force', () => {
 
 const tf = (n: number) => n.toFixed(1);
 const logV = (v: Vector3) => `[${tf(v.x)}, ${tf(v.y)}, ${tf(v.z)}]`;
+const logO = (o: orbit) =>
+  `(a=${tf(o.semiMajorAxis)}, e=${tf(o.eccentricity)}, i=${tf(o.inclination)}, ` +
+  `o=${tf(o.longitudeOfAscendingNode)}, w=${tf(o.argumentOfPeriapsis)}, m=${tf(o.meanAnomaly)}); ` +
+  `TA=${tf(o.extras.trueAnomaly)}, EA=${tf(o.extras.eccentricAnomaly)}, TL=${tf(o.extras.trueLongitude)}, ` +
+  `per=${tf(o.extras.periapsis)}, apo=${tf(o.extras.apoapsis)}, P=${tf(o.extras.period)}`;
 const logB = (b: Body) =>
-  `r=${logV(b.position)}, |r|=${tf(b.position.length())}; ` +
-  `v=${logV(b.velocity)}, |v|=${tf(b.velocity.length())}`;
+  `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
+  `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +
+  logO(orbit.fromState(b.parent.mass, b.mass, b.position, b.velocity));
