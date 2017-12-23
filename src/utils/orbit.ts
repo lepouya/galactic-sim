@@ -11,6 +11,9 @@ export type OrbitalExtras = {
   period: number;
 }
 
+/**
+ * Representation of an orbit using Kepler elements
+ */
 export default class orbit {
   constructor(
     public semiMajorAxis: number,
@@ -23,7 +26,15 @@ export default class orbit {
 
   public extras: OrbitalExtras;
 
-  static fromState(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): orbit {
+  /**
+   * Convert Cartesian orbital state to Kepler elements
+   * @param primaryMass   Mass of the central body
+   * @param secondaryMass Mass of the orbiting body
+   * @param position      Position vector of orbiting body relative to central body
+   * @param velocity      Velocity vector of orbiting body relative to central body
+   * @returns             Keplerian orbital elements
+   */
+  static fromCartesian(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): orbit {
     const r = position, rl = r.length(); // Orbital position
     const v = velocity, vl = v.length(); // Orbital velocity
     const h = new Vector3().crossVectors(r, v), hl = h.length(); // Orbital momentum
@@ -68,7 +79,13 @@ export default class orbit {
     return ret;
   }
 
-  toState(primaryMass: number, secondaryMass: number): [Vector3, Vector3] {
+  /**
+   * Convert Kepler elements to Cartesian orbital state
+   * @param primaryMass   Mass of the central body
+   * @param secondaryMass Mass of the orbiting body
+   * @returns             Position and velocity vectors of the orbiting body with respect to the central body
+   */
+  toCartesian(primaryMass: number, secondaryMass: number): [Vector3, Vector3] {
     const mu = force.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     // Shortcuts for Kepler elements

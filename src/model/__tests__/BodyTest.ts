@@ -299,7 +299,9 @@ describe('Gravitational force', () => {
       for (let j = 0; j < 1000; j++) {
         /*
         if (j % 100 == 0) {
-          [body4.position, body4.velocity] = orbit.fromState(body2.mass, body3.mass, body3.position, body3.velocity).toState(body2.mass, body3.mass);
+          [body4.position, body4.velocity] = orbit
+            .fromCartesian(body2.mass, body3.mass, body3.position, body3.velocity)
+            .toCartesian(body2.mass, body3.mass);
           console.log(`t=${tf(i + j/1000)}, ${logB(body3)}`);
           console.log(`  ---- ${logB(body4)}`);
         }
@@ -322,4 +324,4 @@ const logO = (o: orbit) =>
 const logB = (b: Body) =>
   `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
   `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +
-  logO(orbit.fromState(b.parent.mass, b.mass, b.position, b.velocity));
+  logO(orbit.fromCartesian(b.parent.mass, b.mass, b.position, b.velocity));
