@@ -2,13 +2,6 @@ import { Vector3 } from 'three';
 import force from '../utils/force';
 import approximately from './approximately';
 
-const scalar = (s: number, v: Vector3) => v.clone().multiplyScalar(s);
-const dot = (v1: Vector3, v2: Vector3) => v1.dot(v2);
-const cross = (v1: Vector3, v2: Vector3) => new Vector3().crossVectors(v1, v2);
-const up = new Vector3(0, 1, 0);
-const pi = Math.PI;
-const tau = 2.0 * pi;
-
 export type OrbitalExtras = {
   trueAnomaly: number;
   eccentricAnomaly: number;
@@ -17,6 +10,7 @@ export type OrbitalExtras = {
   apoapsis: number;
   period: number;
 }
+
 export default class orbit {
   constructor(
     public semiMajorAxis: number,
@@ -32,18 +26,17 @@ export default class orbit {
   static fromState(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): orbit {
     const r = position, rl = r.length(); // Orbital position
     const v = velocity, vl = v.length(); // Orbital velocity
-    const h = cross(r, v), hl = h.length(); // Orbital momentum
-    const n = cross(up, h), nl = n.length(); // Node vector
+    const h = new Vector3().crossVectors(r, v), hl = h.length(); // Orbital momentum
     const mu = force.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     const a = 1 / (2 / rl - vl ** 2 / mu); //  Semi-major axis
 
     const p = hl ** 2 / mu;
-    const q = dot(r, v);
+    const q = r.dot(v);
     const e = Math.sqrt(1 - p / a);  // eccentricity
 
     const i = Math.acos(h.y / hl); // Inclination
-    const equatorial = approximately.zero(i) || approximately.equal(i, pi); // Equatorial orbit
+    const equatorial = approximately.zero(i) || approximately.equal(i, Math.PI); // Equatorial orbit
     const o = equatorial ? 0 : Math.atan2(h.x, -h.z); // Longitude of ascending node
 
     const nu = Math.atan2(hl * q / (rl * mu), hl ** 2 / (rl * mu) - 1); // True anomaly
@@ -59,17 +52,17 @@ export default class orbit {
     }
     let w = Math.atan2(sw, cs) - nu; // Argument of periapsis
     if (w < 0) {
-      w += tau;
+      w += 2 * Math.PI;
     }
 
     const ret = new orbit(a, e, i, o, w, m);
     ret.extras = {
       trueAnomaly: nu,
       eccentricAnomaly: u,
-      trueLongitude: (w + nu + o) % tau,
+      trueLongitude: (w + nu + o) % (2 * Math.PI),
       periapsis: a * (1 - e),
       apoapsis: a * (1 + e),
-      period: tau * Math.sqrt(a ** 3 / mu),
+      period: 2 * Math.PI * Math.sqrt(a ** 3 / mu),
     };
 
     return ret;
