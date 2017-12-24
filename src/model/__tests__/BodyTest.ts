@@ -290,22 +290,10 @@ describe('Gravitational force', () => {
     const orbitalDistance = 10;
     const orbitalSpeed = 8.173;
     body3.position = new Vector3(orbitalDistance, 0, 0);
-    body3.velocity = new Vector3(0, orbitalSpeed / Math.sqrt(2), orbitalSpeed / Math.sqrt(2));
+    body3.velocity = new Vector3(0, 0, orbitalSpeed);
 
-    //body3.velocity = new Vector3(0, 0, orbitalSpeed);
-    //let body4 = new Body('4', 0); body4.mass = body3.mass; body4.parent = body3.parent;
-
-    for (let i = 0; i < 10; i++) {
-      for (let j = 0; j < 1000; j++) {
-        /*
-        if (j % 100 == 0) {
-          [body4.position, body4.velocity] = orbit
-            .fromCartesian(body2.mass, body3.mass, body3.position, body3.velocity)
-            .toCartesian(body2.mass, body3.mass);
-          console.log(`t=${tf(i + j/1000)}, ${logB(body3)}`);
-          console.log(`  ---- ${logB(body4)}`);
-        }
-        */
+    for (let i = 0; i < 100; i++) {
+      for (let j = 0; j < 1000; j++) {        
         body3.simulate(i + (j / 1000), Body.SimulationLevel.TwoBody);
       }
       expect(body3.position.length()).to.be.approximately(orbitalDistance, 0.1);
@@ -325,3 +313,13 @@ const logB = (b: Body) =>
   `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
   `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +
   logO(orbit.fromCartesian(b.parent.mass, b.mass, b.position, b.velocity));
+/*
+        let body4 = new Body('4', 0); body4.mass = body3.mass; body4.parent = body3.parent;
+        if (j % 100 == 0) {
+          [body4.position, body4.velocity] = orbit
+            .fromCartesian(body2.mass, body3.mass, body3.position, body3.velocity)
+            .toCartesian(body2.mass, body3.mass);
+          console.log(`t=${tf(i + j/1000)}, ${logB(body3)}`);
+          console.log(`  ---- ${logB(body4)}`);
+        }
+*/

@@ -35,41 +35,41 @@ export default class orbit {
    * @returns             Keplerian orbital elements
    */
   static fromCartesian(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): orbit {
-    const r = position, rl = r.length(); // Orbital position
-    const v = velocity, vl = v.length(); // Orbital velocity
+    const r = new Vector3(position.x, position.z, position.y), rl = r.length(); // Orbital position
+    const v = new Vector3(velocity.x, velocity.z, velocity.y), vl = v.length(); // Orbital velocity
     const h = new Vector3().crossVectors(r, v), hl = h.length(); // Orbital momentum
+    const n = new Vector3(0, 0, 1).cross(h), nl = n.length(); // Ascending vector
     const mu = force.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     const a = 1 / (2 / rl - vl ** 2 / mu); //  Semi-major axis
 
-    const p = hl ** 2 / mu;
-    const q = r.dot(v);
-    const e = Math.sqrt(1 - p / a);  // eccentricity
+    const ev = v.clone().divideScalar(mu).cross(h).sub(r.clone().normalize()); // Eccentricity vector
+    const e = ev.length(); // Eccentricity
 
-    const i = Math.acos(h.y / hl); // Inclination
+    const i = Math.acos(h.z / hl); // Inclination
     const equatorial = approximately.zero(i) || approximately.equal(i, Math.PI); // Equatorial orbit
-    const o = equatorial ? 0 : Math.atan2(h.x, -h.z); // Longitude of ascending node
 
-    const nu = Math.atan2(hl * q / (rl * mu), hl ** 2 / (rl * mu) - 1); // True anomaly
-    const u = Math.atan2(q / Math.sqrt(a * mu), 1 - rl / a); // Eccentric anomaly
-    const m = u - e * Math.sin(u); // Mean anomaly
+    var o = equatorial ? 0 : Math.acos(n.x / nl); // Longitude of ascending node
+    if (n.y < 0) {
+      o = 2 * Math.PI - o;
+    }
 
-    const cs = (rl * Math.cos(o) + r.z * Math.sin(o)) / rl;
-    let sw = 0;
-    if (equatorial) {
-      sw = (r.z * Math.cos(o) - r.x * Math.sin(o)) / rl;
-    } else {
-      sw = r.y / (rl * Math.sin(i));
+    const q = r.dot(v);
+    let nu = Math.acos(ev.dot(r) / e / rl); // True anomaly
+    if (q < 0) {
+      nu = 2 * Math.PI - nu;
     }
-    let w = Math.atan2(sw, cs) - nu; // Argument of periapsis
-    if (w < 0) {
-      w += 2 * Math.PI;
-    }
+    const E = Math.atan2(q / Math.sqrt(a * mu), 1 - rl / a); // Eccentric anomaly
+    const m = E - e * Math.sin(E); // Mean anomaly
+
+    const cw = (r.x * Math.cos(o) + r.y * Math.sin(o))/rl;
+    const sw = equatorial ? ((r.y * Math.cos(o) - r.x * Math.sin(o)) / rl) : (r.z / (rl * Math.sin(i)));
+    let w = Math.atan2(sw, cw) - nu; // Argument of periapsis
 
     const ret = new orbit(a, e, i, o, w, m);
     ret.extras = {
       trueAnomaly: nu,
-      eccentricAnomaly: u,
+      eccentricAnomaly: E,
       trueLongitude: (w + nu + o) % (2 * Math.PI),
       periapsis: a * (1 - e),
       apoapsis: a * (1 + e),
@@ -96,32 +96,32 @@ export default class orbit {
     const ci = Math.cos(i), si = Math.sin(i);
 
     // Calculate eccentric anomaly using Newton's method
-    let j = 0, u = m;
-    let f = u - e * Math.sin(u) - m;
+    let j = 0, E = m;
+    let f = E - e * Math.sin(E) - m;
     while (Math.abs(f) > 1e-6 && j < 30) {
-      u = u - f / (1 - e * Math.cos(u));
-      f = u - e * Math.sin(u) - m;
+      E = E - f / (1 - e * Math.cos(E));
+      f = E - e * Math.sin(E) - m;
       j++;
     }
 
     const nu = 2 * Math.atan2(Math.sqrt(1 + e) * // True anomaly
-      Math.sin(u / 2), Math.sqrt(1 - e) * Math.cos(u / 2));
+      Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
 
-    const rl = a * (1 - e * Math.cos(u)); // Distance to central body
-    const r = new Vector3(rl * Math.cos(nu), 0, rl * Math.sin(nu)); // Position in orbital frame
-    const v = new Vector3(-Math.sin(u), 0, Math.sqrt(1 - e ** 2) * Math.cos(u))
+    const rl = a * (1 - e * Math.cos(E)); // Distance to central body
+    const r = new Vector3(rl * Math.cos(nu), rl * Math.sin(nu), 0); // Position in orbital frame
+    const v = new Vector3(-Math.sin(E), Math.sqrt(1 - e ** 2) * Math.cos(E), 0)
       .multiplyScalar(Math.sqrt(mu * a) / rl); // Velocity vector in the orbital frame
 
     return [
       new Vector3(
-        r.x * (cw * co - sw * ci * so) - r.z * (sw * co + cw * ci * so),
-        r.x * (sw * si) + r.z * (cw * si),
-        r.x * (cw * so + sw * ci * co) + r.z * (cw * ci * co - sw * so),
+        r.x * (cw * co - sw * ci * so) - r.y * (sw * co + cw * ci * so),
+        r.x * (sw * si) + r.y * (cw * si),
+        r.x * (cw * so + sw * ci * co) + r.y * (cw * ci * co - sw * so),
       ),
       new Vector3(
-        v.x * (cw * co - sw * ci * so) - v.z * (sw * co + cw * ci * so),
-        v.x * (sw * si) + v.z * (cw * si),
-        v.x * (cw * so + sw * ci * co) + v.z * (cw * ci * co - sw * so),
+        v.x * (cw * co - sw * ci * so) - v.y * (sw * co + cw * ci * so),
+        v.x * (sw * si) + v.y * (cw * si),
+        v.x * (cw * so + sw * ci * co) + v.y * (cw * ci * co - sw * so),
       ),
     ];
   }
