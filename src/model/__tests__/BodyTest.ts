@@ -293,12 +293,269 @@ describe('Gravitational force', () => {
     body3.velocity = new Vector3(0, 0, orbitalSpeed);
 
     for (let i = 0; i < 100; i++) {
-      for (let j = 0; j < 1000; j++) {        
+      for (let j = 0; j < 1000; j++) {
         body3.simulate(i + (j / 1000), Body.SimulationLevel.TwoBody);
       }
       expect(body3.position.length()).to.be.approximately(orbitalDistance, 0.1);
       expect(body3.velocity.length()).to.be.approximately(orbitalSpeed, 0.1);
     }
+  });
+});
+
+describe('Orbit conversion', () => {
+  let star: Body;
+  let earth1: Body;
+  let earth2: Body;
+
+  const sunMass = 1.989e+30;
+  const earthMass = 5.972e+24;
+  const earthDist = 1.496e+11;
+  const earthSpeed = 2.978e+4;
+
+  const tol = (a, b, t) => t * (1 + Math.max(Math.abs(a), Math.abs(b)));
+  function expectV(v1: Vector3, v2: Vector3, t = 0.01, msg = '') {
+    expect(v1.x).to.be.approximately(v2.x, tol(v1.x, v2.x, t), msg + 'x');
+    expect(v1.y).to.be.approximately(v2.y, tol(v1.y, v2.y, t), msg + 'y');
+    expect(v1.z).to.be.approximately(v2.z, tol(v1.z, v2.z, t), msg + 'z');
+  }
+
+  beforeEach('Setup bodies', () => {
+    star = new Body('0', 0);
+    star.mass = sunMass;
+
+    earth1 = new Body('1', 0);
+    earth1.parent = star;
+    earth1.mass = earthMass;
+    earth1.position = new Vector3(earthDist, 0, 0);
+
+    earth2 = new Body('2', 0);
+    earth2.parent = star;
+    earth2.mass = earthMass;
+  });
+
+  function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true) {
+    for (let i = 0; i < 50; i++) {
+      let t = i * i / 2 * 60 * 60;
+      earth1.simulate(t, Body.SimulationLevel.TwoBody);
+      earth2.orbit = earth1.orbit;
+
+      expectV(earth2.position, earth1.position, 0.01, `r @ ${t} `);
+      expectV(earth2.velocity, earth1.velocity, 0.01, `v @ ${t} `);
+
+      if (further) {
+        expect(earth1.position.length()).to.be.greaterThan(dist * 0.99, `1r> @ ${t}`);
+        expect(earth2.position.length()).to.be.greaterThan(dist * 0.99, `2r> @ ${t}`);
+        expect(earth1.velocity.length()).to.be.lessThan(speed * 1.01, `1v< @ ${t}`);
+        expect(earth2.velocity.length()).to.be.lessThan(speed * 1.01, `2v< @ ${t}`);
+      }
+
+      if (closer) {
+        expect(earth1.position.length()).to.be.lessThan(dist * 1.01, `1r< @ ${t}`);
+        expect(earth2.position.length()).to.be.lessThan(dist * 1.01, `2r< @ ${t}`);
+        expect(earth1.velocity.length()).to.be.greaterThan(speed * 0.99, `1v> @ ${t}`);
+        expect(earth2.velocity.length()).to.be.greaterThan(speed * 0.99, `2v> @ ${t}`);
+      }
+    }
+  }
+
+  it('equatorial circular orbit', () => {
+    earth1.velocity = new Vector3(0, 0, earthSpeed);
+    runOrbitalTests();
+  });
+
+  it('polar circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed, 0);
+    runOrbitalTests();
+  });
+
+  it('slanted ++ circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / Math.sqrt(2), earthSpeed / Math.sqrt(2));
+    runOrbitalTests();
+  });
+
+  it('slanted -- circular orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed / Math.sqrt(2), -earthSpeed / Math.sqrt(2));
+    runOrbitalTests();
+  });
+
+  it('slanted +- circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / 2, -earthSpeed * Math.sqrt(3) / 2);
+    runOrbitalTests();
+  });
+
+  it('slanted -+ circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / 2, earthSpeed * Math.sqrt(3) / 2);
+    runOrbitalTests();
+  });
+
+  it('reverse equatorial circular orbit', () => {
+    earth1.velocity = new Vector3(0, 0, -earthSpeed);
+    runOrbitalTests();
+  });
+
+  it('reverse polar circular orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed, 0);
+    runOrbitalTests();
+  });
+
+  it('equatorial elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, 0, earthSpeed * 1.25);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('polar elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 1.25, 0);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse equatorial elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, 0, -earthSpeed * 1.25);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse polar elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed * 1.25, 0);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('slanted elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 1.25 / Math.sqrt(2), earthSpeed * 1.25 / Math.sqrt(2));
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse slanted elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 0.75 / 2, - earthSpeed * 0.75 * Math.sqrt(3) / 2);
+    runOrbitalTests(earthDist, earthSpeed * 0.75, false, true);
+  });
+});
+
+describe('Orbit prediction', () => {
+  let star: Body;
+  let earth1: Body;
+  let earth2: Body;
+
+  const sunMass = 1.989e+30;
+  const earthMass = 5.972e+24;
+  const earthDist = 1.496e+11;
+  const earthSpeed = 2.978e+4;
+
+  const tol = (a, b, t) => t * (1 + Math.max(Math.abs(a), Math.abs(b)));
+  function expectV(v1: Vector3, v2: Vector3, t = 0.01, msg = '') {
+    expect(v1.x).to.be.approximately(v2.x, tol(v1.x, v2.x, t), msg + 'x');
+    expect(v1.y).to.be.approximately(v2.y, tol(v1.y, v2.y, t), msg + 'y');
+    expect(v1.z).to.be.approximately(v2.z, tol(v1.z, v2.z, t), msg + 'z');
+  }
+
+  beforeEach('Setup bodies', () => {
+    star = new Body('0', 0);
+    star.mass = sunMass;
+
+    earth1 = new Body('1', 0);
+    earth1.parent = star;
+    earth1.mass = earthMass;
+    earth1.position = new Vector3(earthDist, 0, 0);
+
+    earth2 = new Body('2', 0);
+    earth2.parent = star;
+    earth2.mass = earthMass;
+  });
+
+  function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true) {
+    earth2.orbit = earth1.orbit;
+
+    for (let i = 0; i < 50; i++) {
+      let t = i * i / 2 * 60 * 60;
+      earth1.orbit = earth2.orbit;
+      earth1.simulate(t, Body.SimulationLevel.TwoBody);
+      earth2.predictOrbit(t);
+
+      expectV(earth2.position, earth1.position, 0.01, `r @ ${t} `);
+      expectV(earth2.velocity, earth1.velocity, 0.01, `v @ ${t} `);
+
+      if (further) {
+        expect(earth1.position.length()).to.be.greaterThan(dist * 0.99, `1r> @ ${t}`);
+        expect(earth2.position.length()).to.be.greaterThan(dist * 0.99, `2r> @ ${t}`);
+        expect(earth1.velocity.length()).to.be.lessThan(speed * 1.01, `1v< @ ${t}`);
+        expect(earth2.velocity.length()).to.be.lessThan(speed * 1.01, `2v< @ ${t}`);
+      }
+
+      if (closer) {
+        expect(earth1.position.length()).to.be.lessThan(dist * 1.01, `1r< @ ${t}`);
+        expect(earth2.position.length()).to.be.lessThan(dist * 1.01, `2r< @ ${t}`);
+        expect(earth1.velocity.length()).to.be.greaterThan(speed * 0.99, `1v> @ ${t}`);
+        expect(earth2.velocity.length()).to.be.greaterThan(speed * 0.99, `2v> @ ${t}`);
+      }
+    }
+  }
+
+  it('equatorial circular orbit', () => {
+    earth1.velocity = new Vector3(0, 0, earthSpeed);
+    runOrbitalTests();
+  });
+
+  it('polar circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed, 0);
+    runOrbitalTests();
+  });
+
+  it('slanted ++ circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / Math.sqrt(2), earthSpeed / Math.sqrt(2));
+    runOrbitalTests();
+  });
+
+  it('slanted -- circular orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed / Math.sqrt(2), -earthSpeed / Math.sqrt(2));
+    runOrbitalTests();
+  });
+
+  it('slanted +- circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / 2, -earthSpeed * Math.sqrt(3) / 2);
+    runOrbitalTests();
+  });
+
+  it('slanted -+ circular orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed / 2, earthSpeed * Math.sqrt(3) / 2);
+    runOrbitalTests();
+  });
+
+  it('reverse equatorial circular orbit', () => {
+    earth1.velocity = new Vector3(0, 0, -earthSpeed);
+    runOrbitalTests();
+  });
+
+  it('reverse polar circular orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed, 0);
+    runOrbitalTests();
+  });
+
+  it('equatorial elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, 0, earthSpeed * 1.25);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('polar elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 1.25, 0);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse equatorial elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, 0, -earthSpeed * 1.25);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse polar elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, -earthSpeed * 1.25, 0);
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('slanted elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 1.25 / Math.sqrt(2), earthSpeed * 1.25 / Math.sqrt(2));
+    runOrbitalTests(earthDist, earthSpeed * 1.25, true, false);
+  });
+
+  it('reverse slanted elliptic orbit', () => {
+    earth1.velocity = new Vector3(0, earthSpeed * 0.75 / 2, - earthSpeed * 0.75 * Math.sqrt(3) / 2);
+    runOrbitalTests(earthDist, earthSpeed * 0.75, false, true);
   });
 });
 
@@ -312,14 +569,4 @@ const logO = (o: orbit) =>
 const logB = (b: Body) =>
   `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
   `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +
-  logO(orbit.fromCartesian(b.parent.mass, b.mass, b.position, b.velocity));
-/*
-        let body4 = new Body('4', 0); body4.mass = body3.mass; body4.parent = body3.parent;
-        if (j % 100 == 0) {
-          [body4.position, body4.velocity] = orbit
-            .fromCartesian(body2.mass, body3.mass, body3.position, body3.velocity)
-            .toCartesian(body2.mass, body3.mass);
-          console.log(`t=${tf(i + j/1000)}, ${logB(body3)}`);
-          console.log(`  ---- ${logB(body4)}`);
-        }
-*/
+  logO(b.orbit);

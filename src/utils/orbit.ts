@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import force from '../utils/force';
+import Force from '../utils/Force';
 import approximately from './approximately';
 
 export type OrbitalExtras = {
@@ -14,7 +14,7 @@ export type OrbitalExtras = {
 /**
  * Representation of an orbit using Kepler elements
  */
-export default class orbit {
+export default class Orbit {
   constructor(
     public semiMajorAxis: number,
     public eccentricity: number,
@@ -34,12 +34,12 @@ export default class orbit {
    * @param velocity      Velocity vector of orbiting body relative to central body
    * @returns             Keplerian orbital elements
    */
-  static fromCartesian(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): orbit {
+  static fromCartesian(primaryMass: number, secondaryMass: number, position: Vector3, velocity: Vector3): Orbit {
     const r = new Vector3(position.x, position.z, position.y), rl = r.length(); // Orbital position
     const v = new Vector3(velocity.x, velocity.z, velocity.y), vl = v.length(); // Orbital velocity
     const h = new Vector3().crossVectors(r, v), hl = h.length(); // Orbital momentum
     const n = new Vector3(0, 0, 1).cross(h), nl = n.length(); // Ascending vector
-    const mu = force.G * (primaryMass + secondaryMass); // Gravitational parameter
+    const mu = Force.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     const a = 1 / (2 / rl - vl ** 2 / mu); //  Semi-major axis
 
@@ -62,11 +62,11 @@ export default class orbit {
     const E = Math.atan2(q / Math.sqrt(a * mu), 1 - rl / a); // Eccentric anomaly
     const m = E - e * Math.sin(E); // Mean anomaly
 
-    const cw = (r.x * Math.cos(o) + r.y * Math.sin(o))/rl;
+    const cw = (r.x * Math.cos(o) + r.y * Math.sin(o)) / rl;
     const sw = equatorial ? ((r.y * Math.cos(o) - r.x * Math.sin(o)) / rl) : (r.z / (rl * Math.sin(i)));
-    let w = Math.atan2(sw, cw) - nu; // Argument of periapsis
+    const w = Math.atan2(((i >= Math.PI) ? -1 : 1) * sw, cw) - nu; // Argument of periapsis
 
-    const ret = new orbit(a, e, i, o, w, m);
+    const ret = new Orbit(a, e, i, o, w, m);
     ret.extras = {
       trueAnomaly: nu,
       eccentricAnomaly: E,
@@ -86,7 +86,7 @@ export default class orbit {
    * @returns             Position and velocity vectors of the orbiting body with respect to the central body
    */
   toCartesian(primaryMass: number, secondaryMass: number): [Vector3, Vector3] {
-    const mu = force.G * (primaryMass + secondaryMass); // Gravitational parameter
+    const mu = Force.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     // Shortcuts for Kepler elements
     const a = this.semiMajorAxis, e = this.eccentricity, i = this.inclination;

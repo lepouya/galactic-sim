@@ -1,6 +1,9 @@
 import { Vector3 } from 'three';
 
-import force from '../utils/force';
+import Force from '../utils/Force';
+import Orbit from '../utils/Orbit';
+
+const tau = 2 * Math.PI;
 
 export default class Body {
   // Display name of this body
@@ -19,6 +22,9 @@ export default class Body {
   public position = new Vector3();
   // Motion relative to parent's axis, [m/s]
   public velocity = new Vector3();
+
+  // Orbit prediction for this body
+  private _orbit?: Orbit;
 
   // Rotation relative to body's axis, normalized
   public rotation = new Vector3();
@@ -64,6 +70,9 @@ export default class Body {
     }
 
     // TODO: Calculate new axis vector
+
+    // Force recalculation of the orbit
+    this._orbit = undefined;
   }
 
   get axis(): Vector3 {
@@ -82,6 +91,24 @@ export default class Body {
     this.axisAngle = up.angleTo(this.axisAbsolute);
   }
 
+  get orbit() {
+    if (!this._orbit) {
+      this._orbit = Orbit.fromCartesian(
+        this._parent ? this._parent.mass : 0,
+        this.mass,
+        this.position,
+        this.velocity,
+      );
+    }
+
+    return this._orbit;
+  }
+
+  set orbit(orbit: Orbit) {
+    this._orbit = orbit;
+    [this.position, this.velocity] = orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
+  }
+
   getAbsolutePosition(posCache?: Map<string, Vector3>): Vector3 {
     if (posCache && posCache.has(this.id)) {
       return posCache.get(this.id)!;
@@ -97,15 +124,16 @@ export default class Body {
     if (posCache) {
       posCache.set(this.id, pos);
     }
+
     return pos;
   }
 
   static readonly SimulationLevel = {
-    NoGravity:  0, // Use only velocity vector
-    TwoBody:    1, // + Gravity of parent
-    ThreeBody:  3, // + Gravity of grandparent
-    NBody:      4, // + Gravity of children
-    AllBodies:  5, // + Gravity of siblings and uncles
+    NoGravity: 0, // Use only velocity vector
+    TwoBody: 1, //   + Gravity of parent
+    ThreeBody: 3, // + Gravity of grandparent
+    NBody: 4, //     + Gravity of children
+    AllBodies: 5, // + Gravity of siblings and uncles
   }
 
   simulate(now: number, level: number, posCache?: Map<string, Vector3>) {
@@ -122,10 +150,10 @@ export default class Body {
     }
 
     // Force due to current velocity vector
-    let f = force.find(1, this.velocity.clone(), dt);
+    let f = Force.find(1, this.velocity.clone(), dt);
 
     const addGravity = (b: Body) =>
-      f.add(force.gravity(b.mass, 1,
+      f.add(Force.gravity(b.mass, 1,
         b.getAbsolutePosition(posCache).clone().sub(this.getAbsolutePosition(posCache))));
 
     // Gravity of parent
@@ -154,12 +182,32 @@ export default class Body {
     }
 
     // Apply the motion
-    f = force.apply(f, 1, dt);
+    f = Force.apply(f, 1, dt);
     this.position = this.position.add(f);
 
     // Set the new velocity vector
     this.velocity = f.divideScalar(dt);
 
     // TODO: Calculate the rotation
+
+    // Force recalculation of the orbit
+    this._orbit = undefined;
+  }
+
+  predictOrbit(now: number, posCache?: Map<string, Vector3>) {
+    // Find the delta-t and whether it's been long enough to simulate
+    const dt = now - this.lastUpdated;
+    this.lastUpdated = now;
+
+    // Update the mean anomaly after dt/period seconds
+    this.orbit.meanAnomaly = (this.orbit.meanAnomaly + tau * dt / this.orbit.extras.period) % tau;
+    [this.position, this.velocity] = this.orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
+
+    // Local position cache
+    if (posCache && posCache.has(this.id)) {
+      posCache.delete(this.id);
+    }
+
+    // TODO: Rotation
   }
 }

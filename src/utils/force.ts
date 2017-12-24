@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 /**
  * Force in Newtonian physics
  */
-export default abstract class force {
+export default abstract class Force {
   /**
    * Gravitational constant, [m^3/kg/s^2]
    */
@@ -17,7 +17,7 @@ export default abstract class force {
    * @returns  Gravitational force that applies to first object from second [N]
    */
   static gravity(m1: number, m2: number, d: Vector3): Vector3 {
-    return d.setLength(force.G * m1 * m2 / d.lengthSq());
+    return d.setLength(Force.G * m1 * m2 / d.lengthSq());
   }
 
   /**
