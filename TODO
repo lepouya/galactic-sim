@@ -4,7 +4,7 @@ Milestone 1
 [x] N-body simulations and calculations
 [ ] Angular momentum calculations
 [x] Orbital calculations
-[ ] Parabolic and hyperbolic orbits
+[x] Parabolic and hyperbolic orbits
 [ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
 [ ] World state and global clock
 [ ] Debug reporting console

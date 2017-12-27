@@ -452,11 +452,14 @@ describe('Orbit prediction', () => {
   function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true) {
     earth2.orbit = earth1.orbit;
 
-    for (let i = 0; i < 50; i++) {
-      let t = i * i / 2 * 60 * 60;
-      earth1.orbit = earth2.orbit;
-      earth1.simulate(t, Body.SimulationLevel.TwoBody);
-      earth2.predictOrbit(t);
+    let t0 = 0;
+    for (let i = 0; i < 100; i++) {
+      let t = i * i * 60 * 60;
+      while (t0 < t) {
+        t0 += 60 * 60;
+        earth1.simulate(t0, Body.SimulationLevel.TwoBody);
+      }
+      earth2.predictOrbit(t0);
 
       expectV(earth2.position, earth1.position, 0.01, `r @ ${t} `);
       expectV(earth2.velocity, earth1.velocity, 0.01, `v @ ${t} `);
@@ -474,6 +477,9 @@ describe('Orbit prediction', () => {
         expect(earth1.velocity.length()).to.be.greaterThan(speed * 0.99, `1v> @ ${t}`);
         expect(earth2.velocity.length()).to.be.greaterThan(speed * 0.99, `2v> @ ${t}`);
       }
+
+      earth1.position = earth2.position;
+      earth1.velocity = earth2.velocity;
     }
   }
 
@@ -569,27 +575,20 @@ describe('Hyperbolic orbits', () => {
     earth2.mass = earthMass;
   });
 
-  function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true, debug = false) {
-    if (debug) {
-      console.log(`start @ ${logB(earth1)}`);
-    }
+  function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true) {
     earth2.orbit = earth1.orbit;
 
+    let t0 = 0;
     for (let i = 0; i < 50; i++) {
-      earth1.position = earth2.position;
-      earth1.velocity = earth2.velocity;
-
-      let t = i * i / 2 * 60 * 60;
-      earth1.simulate(t, Body.SimulationLevel.TwoBody);
-      earth2.predictOrbit(t);
-
-      if (debug) {
-        console.log(`A @ t=${t} ${logB(earth1)}`);
-        console.log(`B @ t=${t} ${logB(earth2)}`);
+      let t = i * i * i * 60 * 60;
+      while (t0 < t) {
+        t0 += 60 * 60;
+        earth1.simulate(t0, Body.SimulationLevel.TwoBody);
       }
+      earth2.predictOrbit(t0);
 
-      expectV(earth2.position, earth1.position, 0.01, `r @ ${t} `);
-      expectV(earth2.velocity, earth1.velocity, 0.01, `v @ ${t} `);
+      expectV(earth2.position, earth1.position, 0.05, `r @ ${t} `);
+      expectV(earth2.velocity, earth1.velocity, 0.05, `v @ ${t} `);
 
       if (further) {
         expect(earth1.position.length()).to.be.greaterThan(dist * 0.99, `1r> @ ${t}`);
@@ -604,6 +603,9 @@ describe('Hyperbolic orbits', () => {
         expect(earth1.velocity.length()).to.be.greaterThan(speed * 0.99, `1v> @ ${t}`);
         expect(earth2.velocity.length()).to.be.greaterThan(speed * 0.99, `2v> @ ${t}`);
       }
+
+      earth1.position = earth2.position;
+      earth1.velocity = earth2.velocity;
     }
   }
 
@@ -629,16 +631,42 @@ describe('Hyperbolic orbits', () => {
 
   it('Equatorial hyperbolic encounter', () => {
     earth1.velocity = new Vector3(-solarEscape * 1.5, 0, earthSpeed * 0.5);
-    runOrbitalTests(earthDist, earth1.velocity.length(), false, true, true);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+
+  it('Reverse equatorial hyperbolic encounter', () => {
+    earth1.position = new Vector3(-earthDist, 0, 0);
+    earth1.velocity = new Vector3(solarEscape * 1.5, 0, earthSpeed * 0.5);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+
+  it('Polar hyperbolic encounter', () => {
+    earth1.velocity = new Vector3(-solarEscape * 1.5, earthSpeed * 0.5, 0);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+
+  it('Slanted hyperbolic encounter', () => {
+    earth1.velocity = new Vector3(-solarEscape * 1.5, earthSpeed * 0.35, -earthSpeed * 0.35);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+
+  it('Equatorial hyperbolic escape', () => {
+    earth1.velocity = new Vector3(solarEscape * 1.5, 0, earthSpeed * 0.5);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+
+  it('Slanted hyperbolic escape', () => {
+    earth1.velocity = new Vector3(0, solarEscape * 3, solarEscape * 3);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
   });
 });
-
+/*
 const tf = (n: number) => Math.abs(n) < 10 ? n.toFixed(4) : n.toExponential(1);
 const logV = (v: Vector3) => `[${tf(v.x)}, ${tf(v.y)}, ${tf(v.z)}]`;
 const logO = (o: Orbit) =>
   `(a=${tf(o.semiMajorAxis)}, e=${tf(o.eccentricity)}, i=${tf(o.inclination)}, ` +
   `o=${tf(o.longitudeOfAscendingNode)}, w=${tf(o.argumentOfPeriapsis)}, m=${tf(o.meanAnomaly)}); ` +
-  `q=${tf(o.extras.periapsis)}, Q=${tf(o.extras.apoapsis)}, P=${tf(o.extras.period)}`;
+  `q=${tf(o.extras.periapsis)}, Q=${tf(o.extras.apoapsis)}, P=${tf(o.extras.period)}, E=${tf(o.extras.eccentricAnomaly)}`;
 const logB = (b: Body) =>
   `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
   `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +

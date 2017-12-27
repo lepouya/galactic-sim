@@ -200,7 +200,10 @@ export default class Body {
     this.lastUpdated = now;
 
     // Update the mean anomaly after dt/period seconds
-    this.orbit.meanAnomaly = (this.orbit.meanAnomaly + tau * dt / this.orbit.extras.period) % tau;
+    this.orbit.meanAnomaly += dt * this.orbit.extras.meanAngularMotion;
+    if (this.orbit.eccentricity < 1) {
+      this.orbit.meanAnomaly %= 2 * Math.PI;
+    }
     [this.position, this.velocity] = this.orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
 
     // Local position cache

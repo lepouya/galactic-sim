@@ -9,6 +9,7 @@ export type OrbitalExtras = {
   periapsis: number;
   apoapsis: number;
   period: number;
+  meanAngularMotion: number;
 }
 
 /**
@@ -80,6 +81,7 @@ export default class Orbit {
       periapsis: a * (1 - e),
       apoapsis: a * (1 + e),
       period: 2 * Math.PI * Math.sqrt(a ** 3 / mu),
+      meanAngularMotion: Math.sqrt(mu / Math.abs(a) ** 3),
     };
 
     return ret;
@@ -111,22 +113,26 @@ export default class Orbit {
         E += du;
       }
     } else {
-      let m2 = (m > 0) ? m : (m + 2 * Math.PI);
-      E = Math.log(2 * m2 / e + 1.8); // Danby guess
+      let am = Math.abs(m);
+      E = Math.log(2 * am / e + 1.8); // Danby guess
       while ((Math.abs(du) > 1e-6) && (j++ < 30)) {
-        const fh = e * Math.sinh(E) - E - m2;
+        const fh = e * Math.sinh(E) - E - am;
         const dfh = e * Math.cosh(E) - 1;
         du = -fh / dfh;
         E += du;
+      }
+      if (m < 0) {
+        E = -E;
       }
     }
 
     const cE = (e < 1) ? Math.cos(E) : Math.cosh(E), sE = (e < 1) ? Math.sin(E) : Math.sinh(E);
 
     const rl = a * (1 - e * cE); // Distance to central body
+    const aa = Math.abs(a);
     const f = Math.sqrt(Math.abs(1 - e ** 2));
-    const r = new Vector3(a * (cE - e), a * sE * f, 0); // Position in orbital frame
-    const v = new Vector3(-sE, f * cE, 0).multiplyScalar(Math.sqrt(mu * a) / rl); // Velocity vector in the orbital frame
+    const r = new Vector3(a * (cE - e), aa * sE * f, 0); // Position in orbital frame
+    const v = new Vector3(-sE, f * cE, 0).multiplyScalar(Math.sqrt(mu * aa) / rl); // Velocity vector in the orbital frame
 
     return [
       new Vector3(
