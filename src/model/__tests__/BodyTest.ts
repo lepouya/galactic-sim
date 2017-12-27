@@ -3,12 +3,25 @@ import { expect } from 'chai';
 import { Vector3 } from 'three';
 
 import Body from '../Body';
-import orbit from '../../utils/orbit';
+import Orbit from '../../utils/Orbit';
 
 const pi = Math.PI;
+
+const sunMass = 1.989e+30;
+const earthMass = 5.972e+24;
+const earthDist = 1.496e+11;
+const earthSpeed = 2.978e+4;
+
 const expectVector =
   (vec: Vector3, x: number, y: number, z: number) =>
     expect(vec.clone().round()).to.deep.equal(new Vector3(x, y, z).round());
+
+const tol = (a, b, t) => t * (1 + Math.max(Math.abs(a), Math.abs(b)));
+function expectV(v1: Vector3, v2: Vector3, t = 0.01, msg = '') {
+  expect(v1.x).to.be.approximately(v2.x, tol(v1.x, v2.x, t), msg + 'x');
+  expect(v1.y).to.be.approximately(v2.y, tol(v1.y, v2.y, t), msg + 'y');
+  expect(v1.z).to.be.approximately(v2.z, tol(v1.z, v2.z, t), msg + 'z');
+}
 
 describe('Body placement', () => {
   let body1: Body;
@@ -307,18 +320,6 @@ describe('Orbit conversion', () => {
   let earth1: Body;
   let earth2: Body;
 
-  const sunMass = 1.989e+30;
-  const earthMass = 5.972e+24;
-  const earthDist = 1.496e+11;
-  const earthSpeed = 2.978e+4;
-
-  const tol = (a, b, t) => t * (1 + Math.max(Math.abs(a), Math.abs(b)));
-  function expectV(v1: Vector3, v2: Vector3, t = 0.01, msg = '') {
-    expect(v1.x).to.be.approximately(v2.x, tol(v1.x, v2.x, t), msg + 'x');
-    expect(v1.y).to.be.approximately(v2.y, tol(v1.y, v2.y, t), msg + 'y');
-    expect(v1.z).to.be.approximately(v2.z, tol(v1.z, v2.z, t), msg + 'z');
-  }
-
   beforeEach('Setup bodies', () => {
     star = new Body('0', 0);
     star.mass = sunMass;
@@ -434,18 +435,6 @@ describe('Orbit prediction', () => {
   let earth1: Body;
   let earth2: Body;
 
-  const sunMass = 1.989e+30;
-  const earthMass = 5.972e+24;
-  const earthDist = 1.496e+11;
-  const earthSpeed = 2.978e+4;
-
-  const tol = (a, b, t) => t * (1 + Math.max(Math.abs(a), Math.abs(b)));
-  function expectV(v1: Vector3, v2: Vector3, t = 0.01, msg = '') {
-    expect(v1.x).to.be.approximately(v2.x, tol(v1.x, v2.x, t), msg + 'x');
-    expect(v1.y).to.be.approximately(v2.y, tol(v1.y, v2.y, t), msg + 'y');
-    expect(v1.z).to.be.approximately(v2.z, tol(v1.z, v2.z, t), msg + 'z');
-  }
-
   beforeEach('Setup bodies', () => {
     star = new Body('0', 0);
     star.mass = sunMass;
@@ -559,14 +548,99 @@ describe('Orbit prediction', () => {
   });
 });
 
-const tf = (n: number) => n.toFixed(1);
+describe('Hyperbolic orbits', () => {
+  let star: Body;
+  let earth1: Body;
+  let earth2: Body;
+
+  const solarEscape = 4.21272e+4;
+
+  beforeEach('Setup bodies', () => {
+    star = new Body('0', 0);
+    star.mass = sunMass;
+
+    earth1 = new Body('1', 0);
+    earth1.parent = star;
+    earth1.mass = earthMass;
+    earth1.position = new Vector3(earthDist, 0, 0);
+
+    earth2 = new Body('2', 0);
+    earth2.parent = star;
+    earth2.mass = earthMass;
+  });
+
+  function runOrbitalTests(dist = earthDist, speed = earthSpeed, further = true, closer = true, debug = false) {
+    if (debug) {
+      console.log(`start @ ${logB(earth1)}`);
+    }
+    earth2.orbit = earth1.orbit;
+
+    for (let i = 0; i < 50; i++) {
+      earth1.position = earth2.position;
+      earth1.velocity = earth2.velocity;
+
+      let t = i * i / 2 * 60 * 60;
+      earth1.simulate(t, Body.SimulationLevel.TwoBody);
+      earth2.predictOrbit(t);
+
+      if (debug) {
+        console.log(`A @ t=${t} ${logB(earth1)}`);
+        console.log(`B @ t=${t} ${logB(earth2)}`);
+      }
+
+      expectV(earth2.position, earth1.position, 0.01, `r @ ${t} `);
+      expectV(earth2.velocity, earth1.velocity, 0.01, `v @ ${t} `);
+
+      if (further) {
+        expect(earth1.position.length()).to.be.greaterThan(dist * 0.99, `1r> @ ${t}`);
+        expect(earth2.position.length()).to.be.greaterThan(dist * 0.99, `2r> @ ${t}`);
+        expect(earth1.velocity.length()).to.be.lessThan(speed * 1.01, `1v< @ ${t}`);
+        expect(earth2.velocity.length()).to.be.lessThan(speed * 1.01, `2v< @ ${t}`);
+      }
+
+      if (closer) {
+        expect(earth1.position.length()).to.be.lessThan(dist * 1.01, `1r< @ ${t}`);
+        expect(earth2.position.length()).to.be.lessThan(dist * 1.01, `2r< @ ${t}`);
+        expect(earth1.velocity.length()).to.be.greaterThan(speed * 0.99, `1v> @ ${t}`);
+        expect(earth2.velocity.length()).to.be.greaterThan(speed * 0.99, `2v> @ ${t}`);
+      }
+    }
+  }
+
+  it('Equatorial parabolic escape', () => {
+    earth1.velocity = new Vector3(0, 0, solarEscape);
+    runOrbitalTests(earthDist, solarEscape, true, false);
+  });
+
+  it('Reverse equatorial parabolic escape', () => {
+    earth1.velocity = new Vector3(0, 0, -solarEscape);
+    runOrbitalTests(earthDist, solarEscape, true, false);
+  });
+
+  it('Polar parabolic escape', () => {
+    earth1.velocity = new Vector3(0, solarEscape, 0);
+    runOrbitalTests(earthDist, solarEscape, true, false);
+  });
+
+  it('Slanted parabolic escape', () => {
+    earth1.velocity = new Vector3(0, solarEscape / Math.sqrt(2), -solarEscape / Math.sqrt(2));
+    runOrbitalTests(earthDist, solarEscape, true, false);
+  });
+
+  it('Equatorial hyperbolic encounter', () => {
+    earth1.velocity = new Vector3(-solarEscape * 1.5, 0, earthSpeed * 0.5);
+    runOrbitalTests(earthDist, earth1.velocity.length(), false, true, true);
+  });
+});
+
+const tf = (n: number) => Math.abs(n) < 10 ? n.toFixed(4) : n.toExponential(1);
 const logV = (v: Vector3) => `[${tf(v.x)}, ${tf(v.y)}, ${tf(v.z)}]`;
-const logO = (o: orbit) =>
+const logO = (o: Orbit) =>
   `(a=${tf(o.semiMajorAxis)}, e=${tf(o.eccentricity)}, i=${tf(o.inclination)}, ` +
   `o=${tf(o.longitudeOfAscendingNode)}, w=${tf(o.argumentOfPeriapsis)}, m=${tf(o.meanAnomaly)}); ` +
-  `TA=${tf(o.extras.trueAnomaly)}, EA=${tf(o.extras.eccentricAnomaly)}, TL=${tf(o.extras.trueLongitude)}, ` +
-  `per=${tf(o.extras.periapsis)}, apo=${tf(o.extras.apoapsis)}, P=${tf(o.extras.period)}`;
+  `q=${tf(o.extras.periapsis)}, Q=${tf(o.extras.apoapsis)}, P=${tf(o.extras.period)}`;
 const logB = (b: Body) =>
   `(r=${logV(b.position)}, v=${logV(b.velocity)}); ` +
   `(r=${tf(b.position.length())}, v=${tf(b.velocity.length())}); ` +
   logO(b.orbit);
+//*/

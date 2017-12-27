@@ -59,8 +59,14 @@ export default class Orbit {
     if (q < 0) {
       nu = 2 * Math.PI - nu;
     }
-    const E = Math.atan2(q / Math.sqrt(a * mu), 1 - rl / a); // Eccentric anomaly
-    const m = E - e * Math.sin(E); // Mean anomaly
+
+    const f = Math.sqrt(Math.abs(1 - e) / (1 + e));
+    let E = 2 * Math.atan(f * Math.tan(0.5 * nu)); // Eccentric anomaly
+    let m = E - e * Math.sin(E); // Mean anomaly
+    if (e > 1) { // Hyperbolic orbits
+      E = 2 * Math.atanh(f * Math.tan(0.5 * nu));
+      m = e * Math.sinh(E) - E;
+    }
 
     const cw = (r.x * Math.cos(o) + r.y * Math.sin(o)) / rl;
     const sw = equatorial ? ((r.y * Math.cos(o) - r.x * Math.sin(o)) / rl) : (r.z / (rl * Math.sin(i)));
@@ -96,21 +102,31 @@ export default class Orbit {
     const ci = Math.cos(i), si = Math.sin(i);
 
     // Calculate eccentric anomaly using Newton's method
-    let j = 0, E = m;
-    let f = E - e * Math.sin(E) - m;
-    while (Math.abs(f) > 1e-6 && j < 30) {
-      E = E - f / (1 - e * Math.cos(E));
-      f = E - e * Math.sin(E) - m;
-      j++;
+    let j = 0, E = m, du = 1;
+    if (e < 1) {
+      E = m + e * Math.sin(m) + 0.5 * e * e * Math.sin(2 * m);
+      while ((Math.abs(du) > 1e-6) && (j++ < 30)) {
+        const l0 = E - e * Math.sin(E);
+        du = (m - l0) / (1 - e * Math.cos(E));
+        E += du;
+      }
+    } else {
+      let m2 = (m > 0) ? m : (m + 2 * Math.PI);
+      E = Math.log(2 * m2 / e + 1.8); // Danby guess
+      while ((Math.abs(du) > 1e-6) && (j++ < 30)) {
+        const fh = e * Math.sinh(E) - E - m2;
+        const dfh = e * Math.cosh(E) - 1;
+        du = -fh / dfh;
+        E += du;
+      }
     }
 
-    const nu = 2 * Math.atan2(Math.sqrt(1 + e) * // True anomaly
-      Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
+    const cE = (e < 1) ? Math.cos(E) : Math.cosh(E), sE = (e < 1) ? Math.sin(E) : Math.sinh(E);
 
-    const rl = a * (1 - e * Math.cos(E)); // Distance to central body
-    const r = new Vector3(rl * Math.cos(nu), rl * Math.sin(nu), 0); // Position in orbital frame
-    const v = new Vector3(-Math.sin(E), Math.sqrt(1 - e ** 2) * Math.cos(E), 0)
-      .multiplyScalar(Math.sqrt(mu * a) / rl); // Velocity vector in the orbital frame
+    const rl = a * (1 - e * cE); // Distance to central body
+    const f = Math.sqrt(Math.abs(1 - e ** 2));
+    const r = new Vector3(a * (cE - e), a * sE * f, 0); // Position in orbital frame
+    const v = new Vector3(-sE, f * cE, 0).multiplyScalar(Math.sqrt(mu * a) / rl); // Velocity vector in the orbital frame
 
     return [
       new Vector3(
