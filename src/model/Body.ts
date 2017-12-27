@@ -197,11 +197,13 @@ export default class Body {
     const dt = now - this.lastUpdated;
     this.lastUpdated = now;
 
-    // Update the mean anomaly after dt/period seconds
+    // Update the mean anomaly using meanAngularMotion
     this.orbit.meanAnomaly += dt * this.orbit.extras.meanAngularMotion;
     if (this.orbit.eccentricity < 1) {
       this.orbit.meanAnomaly %= 2 * Math.PI;
     }
+
+    // Convert the orbital motion back into Cartesian coordinates
     [this.position, this.velocity] = this.orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
 
     // Local position cache
