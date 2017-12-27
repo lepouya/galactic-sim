@@ -3,8 +3,6 @@ import { Vector3 } from 'three';
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
 
-const tau = 2 * Math.PI;
-
 export default class Body {
   // Display name of this body
   public name: String;
