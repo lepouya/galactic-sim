@@ -1,7 +1,9 @@
-import { Vector3 } from 'three';
+import { Vector3, Euler } from 'three';
 
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
+
+const tau = 2 * Math.PI;
 
 export default class Body {
   // Display name of this body
@@ -24,10 +26,10 @@ export default class Body {
   // Orbit prediction for this body
   private _orbit?: Orbit;
 
-  // Rotation relative to body's axis, normalized
-  public rotation = new Vector3();
+  // Rotation relative to body's axis
+  public rotation = new Euler();
   // Angular momentum relative to body's axis, [rad/s; ccw]
-  public spin = new Vector3();
+  public spin = new Euler();
 
   // Inertial mass, [kg]
   public mass = 0;
@@ -126,6 +128,12 @@ export default class Body {
     return pos;
   }
 
+  protected calculateRotation(dt: number) {
+    this.rotation.x = (this.rotation.x + dt * this.spin.x) % tau;
+    this.rotation.y = (this.rotation.y + dt * this.spin.y) % tau;
+    this.rotation.z = (this.rotation.z + dt * this.spin.z) % tau;
+  }
+
   static readonly SimulationLevel = {
     NoGravity: 0, // Use only velocity vector
     TwoBody: 1, //   + Gravity of parent
@@ -156,7 +164,7 @@ export default class Body {
 
     // Gravity of parent
     if (level >= Body.SimulationLevel.TwoBody && this.parent) {
-      addGravity(this.parent);
+      f.add(Force.gravity(this.parent.mass, 1, this.position.clone().negate()));
     }
 
     // Gravity of grandparent
@@ -186,7 +194,8 @@ export default class Body {
     // Set the new velocity vector
     this.velocity = f.divideScalar(dt);
 
-    // TODO: Calculate the rotation
+    // Calculate the new Euler rotation parameters
+    this.calculateRotation(dt);
 
     // Force recalculation of the orbit
     this._orbit = undefined;
@@ -200,7 +209,7 @@ export default class Body {
     // Update the mean anomaly using meanAngularMotion
     this.orbit.meanAnomaly += dt * this.orbit.extras.meanAngularMotion;
     if (this.orbit.eccentricity < 1) {
-      this.orbit.meanAnomaly %= 2 * Math.PI;
+      this.orbit.meanAnomaly %= tau;
     }
 
     // Convert the orbital motion back into Cartesian coordinates
@@ -211,6 +220,7 @@ export default class Body {
       posCache.delete(this.id);
     }
 
-    // TODO: Rotation
+    // Calculate the new Euler rotation parameters
+    this.calculateRotation(dt);
   }
 }
