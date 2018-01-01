@@ -2,6 +2,7 @@ import { Vector3, Euler } from 'three';
 
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
+import approximately from '../utils/approximately';
 
 const tau = 2 * Math.PI;
 
@@ -45,9 +46,7 @@ export default class Body {
     // Last time vectors were calculated, [s]
     protected lastUpdated: number = Date.now() / 1000.0,
   ) {
-    if (!this.name) {
-      this.name = id;
-    }
+    this.name = id;
   }
 
   get parent() {
@@ -136,16 +135,16 @@ export default class Body {
 
   static readonly SimulationLevel = {
     NoGravity: 0, // Use only velocity vector
-    TwoBody: 1, //   + Gravity of parent
+    TwoBody:   1, // + Gravity of parent
     ThreeBody: 3, // + Gravity of grandparent
-    NBody: 4, //     + Gravity of children
+    NBody:     4, // + Gravity of children
     AllBodies: 5, // + Gravity of siblings and uncles
   }
 
   simulate(now: number, level: number, posCache?: Map<string, Vector3>) {
     // Find the delta-t and whether it's been long enough to simulate
     const dt = now - this.lastUpdated;
-    if (Math.abs(dt) < 0.001) {
+    if (approximately.zero(dt)) {
       return;
     }
     this.lastUpdated = now;
