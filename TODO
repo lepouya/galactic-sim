@@ -5,13 +5,14 @@ Milestone 1
 [x] Angular momentum calculations
 [x] Orbital calculations
 [x] Parabolic and hyperbolic orbits
-[ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
 [x] World state and global clock
-[ ] Debug reporting console
+[x] Debug reporting console
+[ ] Loading and saving of bodies and world
 
 Milestone 2
 [ ] 3D rendering of a scene
 [ ] Time warping
+[ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
 [ ] Switching between orbital predictions and simulations
 
 Milestone 3

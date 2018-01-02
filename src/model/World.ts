@@ -13,19 +13,19 @@ export default class World {
   public readonly children = new Set<Body>();
 
   constructor(
-    public lastUpdated: number = Date.now() / 1000.0,
+    public lastUpdated: number = Date.now() / 1000,
   ) { }
 
-  private _addAll(set: Set<Body>, children: Set<Body>) {
+  getAllChildren(set = new Set<Body>(), children = this.children) {
     children.forEach(body => {
       set.add(body);
-      this._addAll(set, body.children);
+      this.getAllChildren(set, body.children);
     })
     return set;
   }
 
   simulate(
-    now = Date.now() / 1000.0,
+    now = Date.now() / 1000,
     simLevel = World.Default.SimLevel,
     tickDelta = World.Default.TickDelta,
     maxTicks = World.Default.MaxTicks,
@@ -45,7 +45,7 @@ export default class World {
     }
 
     // Find all the bodies to simulate
-    const bodies = this._addAll(new Set<Body>(), this.children);
+    const bodies = this.getAllChildren();
 
     // TODO: Figure out which children can use predictOrbit
 

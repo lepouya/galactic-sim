@@ -8,7 +8,7 @@ const tau = 2 * Math.PI;
 
 export default class Body {
   // Display name of this body
-  public name: String;
+  public name: string;
 
   // Parent element.Bodies with no parent use absolute coordinates
   private _parent?: Body;
@@ -44,7 +44,7 @@ export default class Body {
     // Unique identifier for this body
     public readonly id = Math.random().toString(36).substr(2, 9),
     // Last time vectors were calculated, [s]
-    protected lastUpdated: number = Date.now() / 1000.0,
+    protected lastUpdated: number = Date.now() / 1000,
   ) {
     this.name = id;
   }
@@ -104,7 +104,7 @@ export default class Body {
   }
 
   set orbit(orbit: Orbit) {
-    this._orbit = orbit;
+    this._orbit = undefined;
     [this.position, this.velocity] = orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
   }
 
