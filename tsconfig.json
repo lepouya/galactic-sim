@@ -10,7 +10,7 @@
   ],
   "compilerOptions": {
     "target": "ES5",
-    "lib": ["DOM", "ESNext"],
+    "lib": ["dom", "esnext"],
     "allowJs": true,
     "jsx": "react",
     "sourceMap": true,

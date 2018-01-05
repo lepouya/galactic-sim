@@ -1,5 +1,4 @@
 import { Vector3, Euler } from 'three';
-
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
 import approximately from '../utils/approximately';

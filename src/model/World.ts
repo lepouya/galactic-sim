@@ -1,5 +1,4 @@
 import { Vector3 } from 'three';
-
 import Body from './Body';
 import approximately from '../utils/approximately';
 

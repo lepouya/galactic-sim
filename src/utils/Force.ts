@@ -1,14 +1,10 @@
 import { Vector3 } from 'three';
+import unit from './unit';
 
 /**
  * Force in Newtonian physics
  */
 export default abstract class Force {
-  /**
-   * Gravitational constant, [m^3/kg/s^2]
-   */
-  static G = 6.67408e-11;
-
   /**
    * Find the gravitational force between two objects of mass m1,m2 that are d apart
    * @param m1 Mass of first object [kg]
@@ -17,7 +13,7 @@ export default abstract class Force {
    * @returns  Gravitational force that applies to first object from second [N]
    */
   static gravity(m1: number, m2: number, d: Vector3): Vector3 {
-    return d.setLength(Force.G * m1 * m2 / d.lengthSq());
+    return d.setLength(unit.G * m1 * m2 / d.lengthSq());
   }
 
   /**

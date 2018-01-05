@@ -1,6 +1,6 @@
 import { Vector3 } from 'three';
-import Force from '../utils/Force';
 import approximately from './approximately';
+import unit from './unit';
 
 export type OrbitalExtras = {
   trueAnomaly: number;
@@ -40,7 +40,7 @@ export default class Orbit {
     const v = new Vector3(velocity.x, velocity.z, velocity.y), vl = v.length(); // Orbital velocity
     const h = new Vector3().crossVectors(r, v), hl = h.length(); // Orbital momentum
     const n = new Vector3(0, 0, 1).cross(h), nl = n.length(); // Ascending vector
-    const mu = Force.G * (primaryMass + secondaryMass); // Gravitational parameter
+    const mu = unit.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     const a = 1 / (2 / rl - vl ** 2 / mu); //  Semi-major axis
 
@@ -94,7 +94,7 @@ export default class Orbit {
    * @returns             Position and velocity vectors of the orbiting body with respect to the central body
    */
   toCartesian(primaryMass: number, secondaryMass: number): [Vector3, Vector3] {
-    const mu = Force.G * (primaryMass + secondaryMass); // Gravitational parameter
+    const mu = unit.G * (primaryMass + secondaryMass); // Gravitational parameter
 
     // Shortcuts for Kepler elements
     const a = this.semiMajorAxis, e = this.eccentricity, i = this.inclination;
