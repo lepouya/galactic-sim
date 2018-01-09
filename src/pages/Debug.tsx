@@ -4,7 +4,6 @@ import { RouteComponentProps } from 'react-router';
 import World from '../model/World';
 import BodyCard from '../components/debug/BodyCard';
 import unit from '../utils/unit';
-import bind from '../utils/bind';
 
 export default class Debug extends React.Component<RouteComponentProps<any>> {
   render() {
