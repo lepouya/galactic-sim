@@ -12,7 +12,7 @@ export default class Body {
   // Parent element.Bodies with no parent use absolute coordinates
   private _parent?: Body;
 
-  // Main axis relative to parent axis, normalized, defined "up"
+  // Main axis relative to parent axis, normalized, defines "up"
   private _axis = new Vector3(0, 1, 0);
   protected axisAbsolute = new Vector3(0, 1, 0);
   protected axisNormal = new Vector3();
@@ -107,6 +107,14 @@ export default class Body {
     [this.position, this.velocity] = orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
   }
 
+  validOrbit() {
+    const orbit = this.orbit;
+    const valid = (x: number) => (x === 0) || (!!x);
+    return orbit &&
+      valid(orbit.semiMajorAxis) && valid(orbit.eccentricity) && valid(orbit.inclination) &&
+      valid(orbit.longitudeOfAscendingNode) && valid(orbit.argumentOfPeriapsis) && valid(orbit.meanAnomaly);
+  }
+
   getAbsolutePosition(posCache?: Map<string, Vector3>): Vector3 {
     if (posCache && posCache.has(this.id)) {
       return posCache.get(this.id)!;
@@ -134,9 +142,9 @@ export default class Body {
 
   static readonly SimulationLevel = {
     NoGravity: 0, // Use only velocity vector
-    TwoBody:   1, // + Gravity of parent
+    TwoBody: 1, // + Gravity of parent
     ThreeBody: 3, // + Gravity of grandparent
-    NBody:     4, // + Gravity of children
+    NBody: 4, // + Gravity of children
     AllBodies: 5, // + Gravity of siblings and uncles
   }
 
@@ -220,5 +228,43 @@ export default class Body {
 
     // Calculate the new Euler rotation parameters
     this.calculateRotation(dt);
+  }
+
+  save(): any {
+    const orbit = this.orbit;
+    return {
+      id: this.id,
+      name: this.name,
+      parent: this.parent ? this.parent.id : undefined,
+      updated: this.lastUpdated,
+      mass: this.mass,
+      radius: this.radius,
+      axis: this.axis.toArray(),
+      rotation: this.rotation.toVector3().toArray(),
+      spin: this.rotation.toVector3().toArray(),
+      position: this.position.toArray(),
+      velocity: this.velocity.toArray(),
+      orbit: !this.validOrbit() ? undefined : {
+        semiMajorAxis: orbit.semiMajorAxis,
+        eccentricity: orbit.eccentricity,
+        inclination: orbit.inclination,
+        longitudeOfAscendingNode: orbit.longitudeOfAscendingNode,
+        argumentOfPeriapsis: orbit.argumentOfPeriapsis,
+        meanAnomaly: orbit.meanAnomaly,
+        extras: !orbit.extras ? undefined : {
+          trueAnomaly: orbit.extras.trueAnomaly,
+          eccentricAnomaly: orbit.extras.eccentricAnomaly,
+          trueLongitude: orbit.extras.trueLongitude,
+          periapsis: orbit.extras.periapsis,
+          apoapsis: orbit.extras.apoapsis,
+          period: orbit.extras.period,
+          meanAngularMotion: orbit.extras.meanAngularMotion,
+        }
+      },
+    };
+  }
+
+  saveAll(): any {
+    return [].concat.apply(this.save(), Array.from(this.children).map(b => b.saveAll()));
   }
 }

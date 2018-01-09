@@ -2,6 +2,35 @@ import { Vector3 } from 'three';
 import Body from './Body';
 import approximately from '../utils/approximately';
 
+function _storageAvailable() {
+  const storage = window.localStorage;
+  const x = '__storage_test__';
+
+  if (!storage) {
+    return false;
+  }
+
+  try {
+    storage.setItem(x, x);
+    storage.removeItem(x);
+    return true;
+
+  } catch (e) {
+    return (e instanceof DOMException) &&
+      // acknowledge QuotaExceededError only if there's something already stored
+      (storage.length !== 0) && (
+        // everything except Firefox
+        e.code === 22 ||
+        // Firefox
+        e.code === 1014 ||
+        // test name field too, because code might not be present
+        // everything except Firefox
+        e.name === 'QuotaExceededError' ||
+        // Firefox
+        e.name === 'NS_ERROR_DOM_QUOTA_REACHED');
+  }
+};
+
 export default class World {
   static Default = {
     SimLevel: Body.SimulationLevel.TwoBody,
@@ -14,6 +43,8 @@ export default class World {
   constructor(
     public lastUpdated: number = Date.now() / 1000,
   ) { }
+
+  static Instance = new World();
 
   getAllChildren(set = new Set<Body>(), children = this.children) {
     children.forEach(body => {
@@ -62,5 +93,21 @@ export default class World {
     }
   }
 
-  static Instance = new World();
+  save(): any {
+    return {
+      updated: this.lastUpdated,
+      bodies: [].concat.apply([], Array.from(this.children).map(b => b.saveAll())),
+    };
+  }
+
+  saveToString() {
+    return btoa(JSON.stringify(this.save()));
+  }
+
+  saveToLocalStorage() {
+    const saveVal = this.saveToString();
+    if (_storageAvailable() && saveVal) {
+      localStorage.setItem('World', saveVal);
+    }
+  }
 }

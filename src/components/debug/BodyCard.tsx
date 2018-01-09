@@ -19,7 +19,7 @@ export default class BodyCard extends React.Component<Props> {
     const body = this.props.body;
     const orbit = body.orbit;
     return (
-      <div className="cell small-4 callout primary">
+      <div className="cell small-12 medium-6 large-4 callout primary">
         {fact('name', body.name)}
         {fact('position', unit.print(body.position, unit.distance))}
         {fact('velocity', unit.print(body.velocity, unit.speed))}
