@@ -231,40 +231,96 @@ export default class Body {
   }
 
   save(): any {
-    const orbit = this.orbit;
-    return {
-      id: this.id,
-      name: this.name,
-      parent: this.parent ? this.parent.id : undefined,
-      updated: this.lastUpdated,
-      mass: this.mass,
-      radius: this.radius,
-      axis: this.axis.toArray(),
-      rotation: this.rotation.toVector3().toArray(),
-      spin: this.rotation.toVector3().toArray(),
-      position: this.position.toArray(),
-      velocity: this.velocity.toArray(),
-      orbit: !this.validOrbit() ? undefined : {
+    let res: any = {};
+
+    res.id = this.id;
+    res.name = this.name;
+    res.updated = this.lastUpdated;
+    if (this.parent) {
+      res.parent = this.parent.id;
+    }
+
+    res.mass = this.mass;
+    res.radius = this.radius;
+    res.axis = this.axis.toArray();
+
+    res.rotation = this.rotation.toVector3().toArray();
+    res.spin = this.rotation.toVector3().toArray();
+
+    if (!this.validOrbit()) {
+      res.position = this.position.toArray();
+      res.velocity = this.velocity.toArray();
+    } else {
+      const orbit = this.orbit;
+      res.orbit = {
         semiMajorAxis: orbit.semiMajorAxis,
         eccentricity: orbit.eccentricity,
         inclination: orbit.inclination,
         longitudeOfAscendingNode: orbit.longitudeOfAscendingNode,
         argumentOfPeriapsis: orbit.argumentOfPeriapsis,
         meanAnomaly: orbit.meanAnomaly,
-        extras: !orbit.extras ? undefined : {
-          trueAnomaly: orbit.extras.trueAnomaly,
-          eccentricAnomaly: orbit.extras.eccentricAnomaly,
-          trueLongitude: orbit.extras.trueLongitude,
-          periapsis: orbit.extras.periapsis,
-          apoapsis: orbit.extras.apoapsis,
-          period: orbit.extras.period,
-          meanAngularMotion: orbit.extras.meanAngularMotion,
-        }
-      },
-    };
+      };
+    }
+
+    return res;
   }
 
   saveAll(): any {
     return [].concat.apply(this.save(), Array.from(this.children).map(b => b.saveAll()));
+  }
+
+  load(data: any): Body {
+    this.name = data.name || this.name;
+
+    this.mass = data.mass || this.mass;
+    this.radius = data.radius || this.radius;
+    if (data.axis) {
+      this.axis = new Vector3(
+        data.axis[0] || this.axis.x,
+        data.axis[1] || this.axis.y,
+        data.axis[2] || this.axis.z);
+    }
+
+    if (data.rotation) {
+      this.rotation = new Euler(
+        data.rotation[0] || this.rotation.x,
+        data.rotation[1] || this.rotation.y,
+        data.rotation[2] || this.rotation.z);
+    }
+    if (data.spin) {
+      this.spin = new Euler(
+        data.spin[0] || this.spin.x,
+        data.spin[1] || this.spin.y,
+        data.spin[2] || this.spin.z);
+    }
+    if (data.position) {
+      this.position = new Vector3(
+        data.position[0] || this.position.x,
+        data.position[1] || this.position.y,
+        data.position[2] || this.position.z);
+    }
+    if (data.velocity) {
+      this.velocity = new Vector3(
+        data.velocity[0] || this.velocity.x,
+        data.velocity[1] || this.velocity.y,
+        data.velocity[2] || this.velocity.z);
+    }
+
+    if (data.orbit) {
+      this.orbit = new Orbit(
+        data.orbit.semiMajorAxis,
+        data.orbit.eccentricity,
+        data.orbit.inclination,
+        data.orbit.longitudeOfAscendingNode,
+        data.orbit.argumentOfPeriapsis,
+        data.orbit.meanAnomaly,
+      );
+    }
+
+    return this;
+  }
+
+  static loadNew(data: any): Body {
+    return new Body(data.id || undefined, data.updated || 0).load(data);
   }
 }

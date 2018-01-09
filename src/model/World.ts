@@ -110,4 +110,42 @@ export default class World {
       localStorage.setItem('World', saveVal);
     }
   }
+
+  load(data: any) {
+    if (data.data) {
+      data = data.data;
+    }
+
+    this.lastUpdated = data.updated || 0;
+
+    const bodies = new Map<string, Body>();
+    for (let bodyData of (data.bodies || [])) {
+      const body = Body.loadNew(bodyData);
+      bodies.set(body.id, body);
+      if (bodyData.parent) {
+        body.parent = bodies.get(bodyData.parent);
+        body.load(bodyData);
+      } else {
+        this.children.add(body);
+      }
+    }
+
+    return this;
+  }
+
+  loadFromString(data: string) {
+    return this.load(JSON.parse(atob(data)));
+  }
+
+  loadFromLocalStorage() {
+    if (_storageAvailable()) {
+      const saveVal = localStorage.getItem('World');
+      if (saveVal) {
+        try {
+          this.loadFromString(saveVal);
+        } catch (_) { }
+      }
+    }
+    return this;
+  }
 }

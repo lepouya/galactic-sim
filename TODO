@@ -7,13 +7,14 @@ Milestone 1
 [x] Parabolic and hyperbolic orbits
 [x] World state and global clock
 [x] Debug reporting console
-[ ] Loading and saving of bodies and world
+[x] Loading and saving of bodies and world
 
 Milestone 2
-[ ] 3D rendering of a scene
+[ ] Switching between orbital predictions and simulations
+[ ] Frequent saving
 [ ] Time warping
 [ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
-[ ] Switching between orbital predictions and simulations
+[ ] 3D rendering of a scene
 
 Milestone 3
 [ ] Non-gravitational objects
