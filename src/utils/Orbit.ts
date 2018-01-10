@@ -147,4 +147,39 @@ export default class Orbit {
       ),
     ];
   }
+
+  /**
+   * Fill all the orbital extra parameters without changing the current orbit
+   * @param primaryMass   Mass of the central body
+   * @param secondaryMass Mass of the orbiting body
+   * @returns             The current orbit with the extras filled in
+   */
+  fillOrbitalExtras(primaryMass: number, secondaryMass: number) {
+    const [r, v] = this.toCartesian(primaryMass, secondaryMass);
+    const newOrbit = Orbit.fromCartesian(primaryMass, secondaryMass, r, v);
+    this.extras = newOrbit.extras;
+    return this;
+  }
+
+  /**
+   * Deep copy this orbit object to a new object
+   * @param m1 Mass of the central body, if applicable
+   * @param m2 Mass of the orbiting body, if applicable
+   * @returns  A deep copy of this orbit
+   */
+  deepCopy(m1?: number, m2?: number) {
+    const newOrbit = new Orbit(
+      this.semiMajorAxis,
+      this.eccentricity,
+      this.inclination,
+      this.longitudeOfAscendingNode,
+      this.argumentOfPeriapsis,
+      this.meanAnomaly);
+
+    if ((m1 !== undefined) && (m2 !== undefined)) {
+      newOrbit.fillOrbitalExtras(m1, m2);
+    }
+
+    return newOrbit;
+  }
 }

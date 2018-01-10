@@ -103,7 +103,7 @@ export default class Body {
   }
 
   set orbit(orbit: Orbit) {
-    this._orbit = undefined;
+    this._orbit = orbit.deepCopy(this.parent ? this.parent.mass : 0, this.mass);
     [this.position, this.velocity] = orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
   }
 
@@ -274,6 +274,7 @@ export default class Body {
 
     this.mass = data.mass || this.mass;
     this.radius = data.radius || this.radius;
+
     if (data.axis) {
       this.axis = new Vector3(
         data.axis[0] || this.axis.x,
@@ -287,18 +288,21 @@ export default class Body {
         data.rotation[1] || this.rotation.y,
         data.rotation[2] || this.rotation.z);
     }
+
     if (data.spin) {
       this.spin = new Euler(
         data.spin[0] || this.spin.x,
         data.spin[1] || this.spin.y,
         data.spin[2] || this.spin.z);
     }
+
     if (data.position) {
       this.position = new Vector3(
         data.position[0] || this.position.x,
         data.position[1] || this.position.y,
         data.position[2] || this.position.z);
     }
+
     if (data.velocity) {
       this.velocity = new Vector3(
         data.velocity[0] || this.velocity.x,
