@@ -15,9 +15,11 @@ var buffer = require('vinyl-buffer');
 
 const package = 'galactic-sim';
 const outDir = 'dist';
+const vendor = 'vendor';
 const htmlEntries = ['src/index.pug'];
 const cssEntries = ['src/index.scss'];
 const jsEntries = ['src/index.tsx'];
+const externalLibs = ['react', 'react-dom', 'react-router', 'react-router-dom', 'three'];
 const extensions = ['.js', '.ts', '.jsx', '.tsx', '.json'];
 
 gulp.task('prod', function () {
@@ -37,7 +39,8 @@ gulp.task('html', function () {
   const debug = (process.env.NODE_ENV !== 'production');
   const jsName = package + (debug ? '.js' : '.min.js');
   const cssName = package + (debug ? '.css' : '.min.css');
-  
+  const vendorName = vendor + (debug ? '.js' : '.min.js');
+
   return gulp
     .src(htmlEntries)
     .pipe(pug({
@@ -45,6 +48,7 @@ gulp.task('html', function () {
       locals: {
         jsSource: jsName,
         cssSource: cssName,
+        vendorSource: vendorName,
       }
     }))
     .pipe(gulp.dest(outDir));
@@ -65,6 +69,37 @@ gulp.task('sass', function () {
     .pipe(gulp.dest(outDir));
 });
 
+gulp.task('vendor', function () {
+  const debug = (process.env.NODE_ENV !== 'production');
+  const bundleName = vendor + (debug ? '.js' : '.min.js');
+
+  let bundler = browserify({
+    basedir: '.',
+    debug: debug,
+  });
+
+  externalLibs.forEach(lib => bundler.require(lib));
+
+  let fs = bundler
+    .bundle()
+    .pipe(source(bundleName))
+    .pipe(buffer());
+
+  if (debug) {
+    fs = fs
+      .pipe(sourcemaps.init({
+        loadMaps: true
+      }))
+      .pipe(sourcemaps.write('./'))
+  } else {
+    fs = fs
+      .pipe(uglify());
+  }
+
+  return fs
+    .pipe(gulp.dest(outDir));
+});
+
 gulp.task('ts', function () {
   return bundle();
 });
@@ -78,7 +113,7 @@ gulp.task('server', function () {
   });
 });
 
-gulp.task('compile', ['html', 'sass', 'ts'], function () {});
+gulp.task('compile', ['html', 'sass', 'vendor', 'ts'], function () {});
 gulp.task('release', ['prod', 'compile'], function () {});
 gulp.task('debug', ['dev', 'compile'], function () {});
 gulp.task('watch', ['watching', 'compile'], function () {});
@@ -97,6 +132,7 @@ function bundle() {
         entries: jsEntries,
         extensions: extensions,
       })
+      .external(externalLibs)
       .plugin(tsify, {
         target: 'ES5',
         module: 'ESNext',
