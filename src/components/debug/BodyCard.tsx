@@ -33,6 +33,7 @@ export default class BodyCard extends React.Component<Props> {
         {fact('periapsis', unit.print(orbit.extras.periapsis, unit.distance))}
         {fact('apoapsis', unit.print(orbit.extras.apoapsis, unit.distance))}
         {fact('period', unit.print(orbit.extras.period, unit.time))}
+        {fact('SOI', unit.print(body.sphereOfInfluence, unit.distance))}
       </div>
     );
   }

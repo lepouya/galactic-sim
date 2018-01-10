@@ -2,6 +2,7 @@ import { Vector3, Euler } from 'three';
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
 import approximately from '../utils/approximately';
+import unit from '../utils/unit';
 
 const tau = 2 * Math.PI;
 
@@ -36,6 +37,8 @@ export default class Body {
   // Distance of surface from body's position, [m]
   public radius = 0;
 
+  protected factorSOI?: number;
+
   // Bodies under sphere of influence of this body
   public readonly children = new Set<Body>();
 
@@ -67,10 +70,14 @@ export default class Body {
       this._parent.children.add(this);
     }
 
-    // TODO: Calculate new axis vector
+    // Calculate new axis vector
+    if (this._parent) {
+      this._axis = this.axisAbsolute.clone().applyAxisAngle(this._parent.axisNormal, -this._parent.axisAngle);
+    }
 
-    // Force recalculation of the orbit
+    // Force recalculation of derived values
     this._orbit = undefined;
+    this.factorSOI = undefined;
   }
 
   get axis(): Vector3 {
@@ -105,6 +112,27 @@ export default class Body {
   set orbit(orbit: Orbit) {
     this._orbit = orbit.deepCopy(this.parent ? this.parent.mass : 0, this.mass);
     [this.position, this.velocity] = orbit.toCartesian(this.parent ? this.parent.mass : 0, this.mass);
+  }
+
+  get sphereOfInfluence() {
+    if (this._parent) {
+      if (!this.factorSOI) {
+        // Equilibrium using Newtonian gravity:
+        //this.factorSOI = (Math.sqrt(this.mass * this._parent.mass) - this.mass) / (this._parent.mass - this.mass);
+        // Use equation for Hill Sphere instead
+        this.factorSOI = Math.pow(this.mass / this._parent.mass / 3, 1 / 3);
+      }
+
+      return this.position.length() * this.factorSOI;
+
+    } else {
+      if (!this.factorSOI) {
+        // Assuming velocity dispersion of ~ 100km/s for an average spiral galaxy
+        this.factorSOI = unit.G * this.mass / (100 ** 2);
+      }
+
+      return this.factorSOI;
+    }
   }
 
   validOrbit() {
