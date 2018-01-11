@@ -9,6 +9,7 @@ export default class unit {
   static readonly time = 's';
   static readonly mass = 'Kg'
   static readonly angle = '°';
+  static readonly date = '// ::';
   static readonly speed = 'm/s';
   static readonly acceleration = 'm/s^2';
   static readonly force = 'Kg.m/s^2';
@@ -84,7 +85,7 @@ export default class unit {
 
     const d = Math.floor(deg);
     if (d > 0) {
-      res += d.toFixed(0) + '°';
+      res += d.toFixed() + '°';
     }
 
     const m = Math.floor((deg - d) * 60);
@@ -92,7 +93,7 @@ export default class unit {
       if (d > 0) {
         res += ' ';
       }
-      res += m.toFixed(0) + "'";
+      res += m.toFixed() + "'";
     }
 
     const s = Math.floor(((deg - d) * 60 - m) * 60);
@@ -100,10 +101,34 @@ export default class unit {
       if (d + m > 0) {
         res += ' ';
       }
-      res += s.toFixed(0) + '"';
+      res += s.toFixed() + '"';
     }
 
     return res;
+  }
+
+  private static pDate(n: number, offset = 0, digits = 2) {
+    let ret = (n + offset).toFixed();
+    while (ret.length < digits) {
+      ret = '0' + ret;
+    }
+    return ret;
+  }
+
+  static dPrint(n: number) {
+    const y = Math.floor(n / unit.year_tropical);
+    n -= y * unit.year_tropical;
+    const d = Math.floor(n / unit.day);
+    n -= d * unit.day;
+    const h = Math.floor(n / unit.hour);
+    n -= h * unit.hour;
+    const m = Math.floor(n / unit.minute);
+    n -= m * unit.minute;
+
+    return (
+      unit.pDate(y, 1, 1) + '/' + unit.pDate(d, 1, 1) + ' ' +
+      unit.pDate(h) + ':' + unit.pDate(m) + ':' + unit.pDate(n)
+    );
   }
 
   static uPrint(n: number, u: string) {
@@ -124,6 +149,8 @@ export default class unit {
         return unit.mPrint(n, unit.distances) + '/s^2';
       case unit.angle:
         return unit.aPrint(n);
+      case unit.date:
+        return unit.dPrint(n);
       default:
         return unit.nPrint(n) + u;
     }

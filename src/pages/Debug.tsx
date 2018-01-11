@@ -12,7 +12,7 @@ export default class Debug extends React.Component<RouteComponentProps<any>> {
     return (
       <div className="grid-container">
         <p className="text-center">
-          World clock: {unit.print(World.Instance.lastUpdated, unit.time)}
+          World clock: {unit.print(World.Instance.lastUpdated, unit.date)}
         </p>
         <div className="grid-x grid-margin-x grid-margin-y">
           {bodies.map(body => <BodyCard body={body} key={body.id} />)}
