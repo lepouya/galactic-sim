@@ -191,15 +191,15 @@ export default class Body {
       return this.validOrbit() ? Body.SimulationLevel.OrbitalPrediction : Body.SimulationLevel.TwoBody;
     }
 
-    const dist = this.position.length(), soi = this.parent.sphereOfInfluence;
+    const dist = this.position.length();
 
     // Way too close to the surface. Use 2-body physics
-    if (dist < this.radius * 1.01) {
+    if (dist < this.parent.radius * 1.01) {
       return Body.SimulationLevel.TwoBody;
     }
 
     // Too far out of the SOI. Should switch to grandparent
-    if (dist > soi) {
+    if (dist > this.parent.sphereOfInfluence) {
       return Body.SimulationLevel.ThreeBody;
     }
 

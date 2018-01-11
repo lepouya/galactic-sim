@@ -4,13 +4,17 @@ import { Vector3 } from 'three';
 
 import Body from '../Body';
 import Orbit from '../../utils/Orbit';
+import unit from '../../utils/unit';
 
 const pi = Math.PI;
 
 const sunMass = 1.989e+30;
+const sunSize = 6.957e+8;
 const earthMass = 5.972e+24;
+const earthSize = 6.371e+6
 const earthDist = 1.496e+11;
 const earthSpeed = 2.978e+4;
+const solarEscape = 4.21272e+4;
 
 const expectVector =
   (vec: Vector3, x: number, y: number, z: number) =>
@@ -559,8 +563,6 @@ describe('Hyperbolic orbits', () => {
   let earth1: Body;
   let earth2: Body;
 
-  const solarEscape = 4.21272e+4;
-
   beforeEach('Setup bodies', () => {
     star = new Body('0', 0);
     star.mass = sunMass;
@@ -658,6 +660,103 @@ describe('Hyperbolic orbits', () => {
   it('Slanted hyperbolic escape', () => {
     earth1.velocity = new Vector3(0, solarEscape * 3, solarEscape * 3);
     runOrbitalTests(earthDist, earth1.velocity.length(), false, false);
+  });
+});
+
+describe('Sphere of influence', () => {
+  let sun: Body;
+  let earth: Body;
+  let ship: Body;
+
+  beforeEach('Setup bodies', () => {
+    sun = new Body('sun', 0);
+    sun.mass = sunMass;
+    sun.radius = sunSize;
+
+    earth = new Body('earth', 0);
+    earth.parent = sun;
+    earth.mass = earthMass;
+    earth.radius = earthSize;
+    earth.position = new Vector3(earthDist, 0, 0);
+    earth.velocity = new Vector3(0, 0, earthSpeed);
+
+    ship = new Body('ship', 0);
+    ship.parent = sun;
+    ship.mass = 1;
+    ship.radius = 1;
+  });
+
+  it('sun has large SOI', () => {
+    expect(sun.sphereOfInfluence).to.be.greaterThan(unit.ly);
+  });
+
+  it('earth has a smaller SOI', () => {
+    expect(earth.sphereOfInfluence).to.be.greaterThan(1e8);
+    expect(earth.sphereOfInfluence).to.be.lessThan(1e10);
+  });
+
+  it('sun uses non-gravity sim', () => {
+    expect(sun.calculateSimulationLevel()).to.equal(Body.SimulationLevel.NoGravity);
+  });
+
+  it('earth uses orbital sim', () => {
+    expect(earth.calculateSimulationLevel()).to.equal(Body.SimulationLevel.OrbitalPrediction);
+  });
+
+  it('ship at origin uses 2-body sim', () => {
+    ship.position = new Vector3(0, 0, 0);
+    ship.velocity = new Vector3(0, 0, 0);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.TwoBody);
+  });
+
+  it('ship near surface uses 2-body sim', () => {
+    ship.position = new Vector3(sunSize, 0, 0);
+    ship.velocity = new Vector3(0, 0, solarEscape);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.TwoBody);
+  });
+
+  it('escaping ship uses orbital sim', () => {
+    ship.position = new Vector3(0, 0, earthDist);
+    ship.velocity = new Vector3(0, solarEscape, 0);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.OrbitalPrediction);
+  });
+
+  it('co-orbiting ship uses orbital sim', () => {
+    ship.position = new Vector3(-earthDist, 0, 0);
+    ship.velocity = new Vector3(0, 0, -earthSpeed);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.OrbitalPrediction);
+  });
+
+  it('stalled ship uses 2-body sim', () => {
+    ship.position = new Vector3(0, earthDist, 0);
+    ship.velocity = new Vector3(0, 0, 0);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.TwoBody);
+  });
+
+  it('escaped ship uses 3-body sim', () => {
+    ship.position = new Vector3(10 * unit.ly, 0, 0);
+    ship.velocity = new Vector3(0, 0, solarEscape);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.ThreeBody);
+  });
+
+  it('ship just out of earth SOI uses orbital sim', () => {
+    ship.position = new Vector3(earthDist, 1.5e9, 1.5e9);
+    ship.velocity = new Vector3(0, 0, earthSpeed);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.OrbitalPrediction);
+  });
+
+  it('ship within earth SOI uses multi-body sim', () => {
+    ship.position = new Vector3(earthDist, 1.5e7, 1.5e7);
+    ship.velocity = new Vector3(0, 0, earthSpeed);
+
+    expect(ship.calculateSimulationLevel()).to.equal(Body.SimulationLevel.FamilyBodies);
   });
 });
 /*
