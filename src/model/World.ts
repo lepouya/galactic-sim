@@ -56,7 +56,6 @@ export default class World {
 
   simulate(
     now = Date.now() / 1000,
-    simLevel = World.Default.SimLevel,
     tickDelta = World.Default.TickDelta,
     maxTicks = World.Default.MaxTicks,
     posCache?: Map<string, Vector3>,
