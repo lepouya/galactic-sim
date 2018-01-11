@@ -10,10 +10,10 @@ Milestone 1
 [x] Loading and saving of bodies and world
 
 Milestone 2
-[ ] Switching between orbital predictions and simulations
+[x] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
+[x] Switching between orbital predictions and simulations
 [ ] Frequent saving
 [ ] Time warping
-[ ] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
 [ ] 3D rendering of a scene
 
 Milestone 3

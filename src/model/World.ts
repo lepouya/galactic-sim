@@ -46,12 +46,12 @@ export default class World {
 
   static Instance = new World();
 
-  getAllChildren(set = new Set<Body>(), children = this.children) {
+  getAllChildren(map = new Map<Body, number>(), children = this.children) {
     children.forEach(body => {
-      set.add(body);
-      this.getAllChildren(set, body.children);
+      map.set(body, body.calculateSimulationLevel());
+      this.getAllChildren(map, body.children);
     })
-    return set;
+    return map;
   }
 
   simulate(
@@ -77,7 +77,12 @@ export default class World {
     // Find all the bodies to simulate
     const bodies = this.getAllChildren();
 
-    // TODO: Figure out which children can use predictOrbit
+    // Figure out which children can use predictOrbit
+    bodies.forEach((simLevel, body) => {
+       if (simLevel == Body.SimulationLevel.OrbitalPrediction) {
+         body.predictOrbit(now, posCache);
+       }
+    })
 
     // Find out the actual tickDelta
     if (Math.abs(dt) < tickDelta) {
@@ -89,7 +94,11 @@ export default class World {
     }
 
     for (let time = startTime; time <= now; time += tickDelta) {
-      bodies.forEach(body => body.simulate(time, simLevel, posCache));
+      bodies.forEach((simLevel, body) => {
+        if (simLevel != Body.SimulationLevel.OrbitalPrediction) {
+          body.simulate(time, simLevel, posCache);
+        }
+      });
     }
   }
 

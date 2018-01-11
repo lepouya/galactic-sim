@@ -75,6 +75,8 @@ export default class Body {
       this._axis = this.axisAbsolute.clone().applyAxisAngle(this._parent.axisNormal, -this._parent.axisAngle);
     }
 
+    // TODO: Calculate new position and velocity relative to new parent
+
     // Force recalculation of derived values
     this._orbit = undefined;
     this.factorSOI = undefined;
@@ -173,7 +175,49 @@ export default class Body {
     TwoBody: 1, // + Gravity of parent
     ThreeBody: 3, // + Gravity of grandparent
     NBody: 4, // + Gravity of children
-    AllBodies: 5, // + Gravity of siblings and uncles
+    FamilyBodies: 5, // + Gravity of siblings
+    AllBodies: 6, // + Gravity of uncles
+    OrbitalPrediction: 9, // Kepler's orbital prediction
+  }
+
+  calculateSimulationLevel() {
+    // When there's no parent, use basic kinetic motion
+    if (!this.parent) {
+      return Body.SimulationLevel.NoGravity;
+    }
+
+    // Large object. Use simple simulations
+    if ((this.mass > 1e10) || (this.radius > 1e5)) {
+      return this.validOrbit() ? Body.SimulationLevel.OrbitalPrediction : Body.SimulationLevel.TwoBody;
+    }
+
+    const dist = this.position.length(), soi = this.parent.sphereOfInfluence;
+
+    // Way too close to the surface. Use 2-body physics
+    if (dist < this.radius * 1.01) {
+      return Body.SimulationLevel.TwoBody;
+    }
+
+    // Too far out of the SOI. Should switch to grandparent
+    if (dist > soi) {
+      return Body.SimulationLevel.ThreeBody;
+    }
+
+    // Check if there's a contest for any of siblings influence
+    for (let body of Array.from(this.parent.children)) {
+      if ((body != this) && (body.position.clone().sub(this.position).length() < body.sphereOfInfluence)) {
+        // Too close to one of the siblings. Should switch parentage
+        return Body.SimulationLevel.FamilyBodies;
+      }
+    }
+
+    // Use orbital prediction when you're within the right SOI
+    if (this.validOrbit()) {
+      return Body.SimulationLevel.OrbitalPrediction;
+    }
+
+    // Nothing special effecting this object. Just run a normal 2-body simulation
+    return Body.SimulationLevel.TwoBody;
   }
 
   simulate(now: number, level: number, posCache?: Map<string, Vector3>) {
@@ -212,7 +256,7 @@ export default class Body {
     }
 
     // Gravity of siblings
-    if (level >= Body.SimulationLevel.AllBodies && this.parent) {
+    if (level >= Body.SimulationLevel.FamilyBodies && this.parent) {
       this.parent.children.forEach(sibling => (sibling == this) || addGravity(sibling));
     }
 

@@ -7,7 +7,7 @@ import unit from '../utils/unit';
 
 export default class Debug extends React.Component<RouteComponentProps<any>> {
   render() {
-    const bodies = Array.from(World.Instance.getAllChildren());
+    const bodies = Array.from(World.Instance.getAllChildren().keys());
 
     return (
       <div className="grid-container">
