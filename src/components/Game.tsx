@@ -1,11 +1,12 @@
 import React from 'react';
 import { HashRouter, Link, Route, Switch } from 'react-router-dom';
+import bind from '../utils/bind';
 
 import Main from '../pages/Main';
 import Help from '../pages/Help';
 import Debug from '../pages/Debug';
 import World from '../model/World';
-import bind from '../utils/bind';
+import Clock from './Clock';
 
 export interface GameProps {
 }
@@ -13,6 +14,7 @@ export interface GameProps {
 export interface GameState {
   lastSave: number;
   lastUpdate: number;
+  warp: number;
   timerId?: NodeJS.Timer;
 }
 
@@ -23,6 +25,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     this.state = {
       lastSave: Date.now(),
       lastUpdate: Date.now(),
+      warp: 1,
       timerId: undefined,
     };
   }
@@ -31,7 +34,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     if (!this.state.timerId) {
       const timerId = setInterval(
         this.tick,
-        100,
+        1000 / 60,
       );
       this.setState({ timerId });
     }
@@ -50,8 +53,12 @@ export default class Game extends React.Component<GameProps, GameState> {
     const dt = now - this.state.lastUpdate;
     this.setState({ lastUpdate: now });
 
-    const world = World.Instance;
-    world.simulate(world.lastUpdated + dt / 1000 * 60);
+    World.Instance.simulate(World.Instance.lastUpdated + dt / 1000 * this.state.warp);
+  }
+
+  @bind
+  setWarp(warp: number) {
+    this.setState({ warp });
   }
 
   render() {
@@ -60,6 +67,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         <div>
           <header>
             <div className="top-bar">
+              <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
               <div className="top-bar-left">
                 <ul className="menu">
                   <li><Link to="/">Galactic Sim</Link></li>

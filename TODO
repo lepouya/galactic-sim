@@ -13,7 +13,7 @@ Milestone 2
 [x] Helpers for orbits, sub-orbits, escapes, spheres of influence and tidal locking
 [x] Switching between orbital predictions and simulations
 [ ] Frequent saving
-[ ] Time warping
+[x] Time warping
 [ ] 3D rendering of a scene
 
 Milestone 3
