@@ -66,19 +66,17 @@ export default class Game extends React.Component<GameProps, GameState> {
       <HashRouter>
         <div>
           <header>
-            <div className="top-bar" id="navBar">
+            <div className="top-bar" id="navBar" style={{padding: 0}}>
               <div className="top-bar-left">
                 <ul className="menu">
-                  <li><Link to="/">Galactic Sim</Link></li>
-                </ul>
-              </div>
-              <div className="top-bar-right">
-                <ul className="menu">
+                  <li><Link to="/">Camera</Link></li>
                   <li><Link to="/help">Help</Link></li>
                   <li><Link to="/debug">Debug</Link></li>
                 </ul>
               </div>
-              <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
+              <div className="top-bar-right">
+                <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
+              </div>
             </div>
           </header>
           <main>
