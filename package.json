@@ -34,7 +34,6 @@
     "babelify": "^8.0.0",
     "browserify": "^14.5.0",
     "chai": "^4.1.2",
-    "foundation-sites": "^6.4.4-rc1",
     "gulp": "^3.9.1",
     "gulp-cli": "^1.4.0",
     "gulp-connect": "^5.2.0",
