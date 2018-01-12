@@ -8,10 +8,10 @@ import Debug from '../pages/Debug';
 import World from '../model/World';
 import Clock from './Clock';
 
-export interface GameProps {
+interface GameProps {
 }
 
-export interface GameState {
+interface GameState {
   lastSave: number;
   lastUpdate: number;
   warp: number;
