@@ -66,7 +66,7 @@ export default class Game extends React.Component<GameProps, GameState> {
       <HashRouter>
         <div>
           <header>
-            <div className="top-bar">
+            <div className="top-bar" id="navBar">
               <div className="top-bar-left">
                 <ul className="menu">
                   <li><Link to="/">Galactic Sim</Link></li>

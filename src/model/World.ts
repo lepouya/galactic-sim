@@ -1,6 +1,8 @@
+import * as THREE from 'three';
 import { Vector3 } from 'three';
 import Body from './Body';
 import approximately from '../utils/approximately';
+import bind from '../utils/bind';
 
 function _storageAvailable() {
   const storage = window.localStorage;
@@ -36,15 +38,23 @@ export default class World {
     SimLevel: Body.SimulationLevel.TwoBody,
     TickDelta: 0.1,
     MaxTicks: 1000,
-  }
 
-  public readonly children = new Set<Body>();
+    FOV: 75,
+    NearPlane: 0.1,
+    FarPlane: 1000,
+  }
 
   constructor(
     public lastUpdated: number = Date.now() / 1000,
   ) { }
 
   static Instance = new World();
+
+  // ---------------
+  // Physics section
+  // ---------------
+
+  public readonly children = new Set<Body>();
 
   getAllChildren(map = new Map<Body, number>(), children = this.children) {
     children.forEach(body => {
@@ -78,9 +88,9 @@ export default class World {
 
     // Figure out which children can use predictOrbit
     bodies.forEach((simLevel, body) => {
-       if (simLevel == Body.SimulationLevel.OrbitalPrediction) {
-         body.predictOrbit(now, posCache);
-       }
+      if (simLevel == Body.SimulationLevel.OrbitalPrediction) {
+        body.predictOrbit(now, posCache);
+      }
     })
 
     // Find out the actual tickDelta
@@ -155,5 +165,59 @@ export default class World {
       }
     }
     return this;
+  }
+
+  // ----------------
+  // Graphics section
+  // ----------------
+
+  public scene: THREE.Scene;
+  public camera: THREE.PerspectiveCamera;
+  public renderer: THREE.Renderer;
+
+  initRenderer() {
+    if (this.scene || this.camera || this.renderer) {
+      return;
+    }
+
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(
+      World.Default.FOV,
+      window.innerWidth / window.innerHeight,
+      World.Default.NearPlane,
+      World.Default.FarPlane);
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+    window.addEventListener('resize', this.onWindowResize, false);
+
+    let geometry = new THREE.BoxGeometry(1, 1, 1);
+    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    let cube = new THREE.Mesh(geometry, material);
+    this.scene.add(cube);
+    this.camera.position.z = 5;
+
+    const _this = this;
+    let animate = function () {
+      requestAnimationFrame(animate);
+      cube.rotation.x += 0.1;
+      cube.rotation.y += 0.1;
+      _this.renderer.render(_this.scene, _this.camera);
+    };
+    animate();
+  }
+
+  @bind
+  onWindowResize() {
+    let width = window.innerWidth, height = window.innerHeight;
+
+    const navBar = document.getElementById("navBar");
+    if (navBar) {
+      height -= navBar.clientHeight;
+    }
+
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
   }
 }

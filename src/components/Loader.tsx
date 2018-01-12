@@ -23,6 +23,7 @@ export default class Loader extends React.Component<{}, LoaderState> {
   async load() {
     const world = World.Instance;
 
+    world.initRenderer();
     world.loadFromLocalStorage();
     if (world.children.size == 0) {
       world.load(require('../data/solar_system'));
