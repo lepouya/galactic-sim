@@ -19,44 +19,37 @@ export default class Clock extends React.Component<Props> {
       <div className="grid-container">
         <div className="grid-y">
           <div className="cell">
-            World Clock: {unit.print(World.Instance.lastUpdated, unit.date)}
+            {unit.print(World.Instance.lastUpdated, unit.date)}
           </div>
           <div style={{ margin: 0 }} className="cell button-group">
             {warpPoints.map((v, i) =>
               <button
                 key={'warp' + i}
-                style={{ padding: '0.4rem 0.2rem' }}
+                style={{ padding: '0.2rem' }}
                 className={(v <= warp ? 'success' : 'secondary') + ' button'}
                 onClick={() => this.props.setWarp(v)}
               />
             )}
-            &nbsp;
-            {(warp == 0) ? 'paused' :
-              (warp == 1) ? '' :
-                (warp > 1) ? (warp.toFixed() + 'x') :
-                  ('1/' + (1 / warp).toFixed() + 'x')}
           </div>
           <div style={{ margin: 0 }} className="cell button-group tiny">
             <button
-              style={{ margin: '0.2rem' }}
-              onClick={() => this.props.setWarp(0)}>
-              &#x23F8;
-              </button>
-            <button
-              style={{ margin: '0.2rem' }}
+              className="clock-button"
               onClick={() => this.props.setWarp(warpPoints[Math.max(0, index - 1)])}>
               &#x23EA;
-              </button>
+            </button>
             <button
-              style={{ margin: '0.2rem' }}
-              onClick={() => this.props.setWarp(1)}>
+              className="clock-button"
+              onClick={() => this.props.setWarp(warp == 1 ? 0 : 1)}>
               &#x23EF;
-              </button>
+            </button>
             <button
-              style={{ margin: '0.2rem' }}
+              className="clock-button"
               onClick={() => this.props.setWarp(warpPoints[Math.min(11, index + 1)])}>
               &#x23e9;
-              </button>
+            </button>
+            {(warp == 0) ? 'Paused' :
+              (warp >= 1) ? (warp.toFixed() + 'x') :
+                ('1/' + (1 / warp).toFixed() + 'x')}
           </div>
         </div>
       </div>

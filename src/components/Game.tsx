@@ -67,7 +67,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         <div>
           <header>
             <div className="top-bar">
-              <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
               <div className="top-bar-left">
                 <ul className="menu">
                   <li><Link to="/">Galactic Sim</Link></li>
@@ -79,6 +78,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                   <li><Link to="/debug">Debug</Link></li>
                 </ul>
               </div>
+              <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
             </div>
           </header>
           <main>
