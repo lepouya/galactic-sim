@@ -1,8 +1,8 @@
-import * as THREE from 'three';
-import { Vector3 } from 'three';
+import { Vector3, Scene, PerspectiveCamera, WebGLRenderer } from 'three';
 import Body from './Body';
 import approximately from '../utils/approximately';
 import bind from '../utils/bind';
+import unit from '../utils/unit';
 
 function _storageAvailable() {
   const storage = window.localStorage;
@@ -41,7 +41,7 @@ export default class World {
 
     FOV: 75,
     NearPlane: 0.1,
-    FarPlane: 1000,
+    FarPlane: unit.ly,
   }
 
   constructor(
@@ -55,6 +55,8 @@ export default class World {
   // ---------------
 
   public readonly children = new Set<Body>();
+  private bodies = this.getAllChildren();
+  private posCache = new Map<string, Vector3>();
 
   getAllChildren(map = new Map<Body, number>(), children = this.children) {
     children.forEach(body => {
@@ -68,7 +70,6 @@ export default class World {
     now = Date.now() / 1000,
     tickDelta = World.Default.TickDelta,
     maxTicks = World.Default.MaxTicks,
-    posCache?: Map<string, Vector3>,
   ) {
     // Find the delta-t and whether it's been long enough to simulate
     const dt = now - this.lastUpdated;
@@ -78,18 +79,13 @@ export default class World {
     const startTime = this.lastUpdated;
     this.lastUpdated = now;
 
-    // Local position cache
-    if (!posCache) {
-      posCache = new Map<string, Vector3>();
-    }
-
     // Find all the bodies to simulate
-    const bodies = this.getAllChildren();
+    this.bodies = this.getAllChildren();
 
     // Figure out which children can use predictOrbit
-    bodies.forEach((simLevel, body) => {
+    this.bodies.forEach((simLevel, body) => {
       if (simLevel == Body.SimulationLevel.OrbitalPrediction) {
-        body.predictOrbit(now, posCache);
+        body.predictOrbit(now, this.posCache);
       }
     })
 
@@ -103,9 +99,9 @@ export default class World {
     }
 
     for (let time = startTime; time <= now; time += tickDelta) {
-      bodies.forEach((simLevel, body) => {
+      this.bodies.forEach((simLevel, body) => {
         if (simLevel != Body.SimulationLevel.OrbitalPrediction) {
-          body.simulate(time, simLevel, posCache);
+          body.simulate(time, simLevel, this.posCache);
         }
       });
     }
@@ -171,53 +167,64 @@ export default class World {
   // Graphics section
   // ----------------
 
-  public scene: THREE.Scene;
-  public camera: THREE.PerspectiveCamera;
-  public renderer: THREE.Renderer;
+  public scene: Scene;
+  public camera: PerspectiveCamera;
+  public renderer: WebGLRenderer;
+
+  public focus?: Body;
 
   initRenderer() {
     if (this.scene || this.camera || this.renderer) {
       return;
     }
 
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(
+    this.renderer = new WebGLRenderer({
+      antialias: true,
+      logarithmicDepthBuffer: true,
+    });
+
+    this.camera = new PerspectiveCamera(
       World.Default.FOV,
       window.innerWidth / window.innerHeight,
       World.Default.NearPlane,
       World.Default.FarPlane);
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-    window.addEventListener('resize', this.onWindowResize, false);
+    this.scene = new Scene();
 
-    let geometry = new THREE.BoxGeometry(1, 1, 1);
-    let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    let cube = new THREE.Mesh(geometry, material);
-    this.scene.add(cube);
-    this.camera.position.z = 5;
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.resizeWindow();
+    this.animate();
 
-    const _this = this;
-    let animate = function () {
-      requestAnimationFrame(animate);
-      cube.rotation.x += 0.1;
-      cube.rotation.y += 0.1;
-      _this.renderer.render(_this.scene, _this.camera);
-    };
-    animate();
+    window.addEventListener('resize', this.resizeWindow, false);
   }
 
   @bind
-  onWindowResize() {
+  animate() {
+    requestAnimationFrame(this.animate);
+
+    if (this.focus) {
+      const focusPoint = this.focus.getAbsolutePosition(this.posCache);
+      this.camera.position.copy(focusPoint).setLength(focusPoint.length() + this.focus.radius * 10).addScalar(this.focus.radius);
+      this.camera.lookAt(focusPoint);
+      this.camera.updateProjectionMatrix();
+    }
+
+    this.bodies.forEach((_, body) => body.setScene(this.scene, this.posCache));
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  @bind
+  resizeWindow() {
     let width = window.innerWidth, height = window.innerHeight;
 
-    const navBar = document.getElementById("navBar");
+    const navBar = document.getElementById('navBar');
     if (navBar) {
       height -= navBar.clientHeight;
     }
 
+    this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(width, height);
   }
 }

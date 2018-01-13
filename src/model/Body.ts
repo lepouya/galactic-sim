@@ -1,8 +1,9 @@
-import { Vector3, Euler } from 'three';
+import { Vector3, Euler, Mesh, Scene, SphereBufferGeometry, BoxBufferGeometry, MeshBasicMaterial } from 'three';
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
 import approximately from '../utils/approximately';
 import unit from '../utils/unit';
+import World from './World';
 
 const tau = 2 * Math.PI;
 
@@ -47,9 +48,7 @@ export default class Body {
     public readonly id = Math.random().toString(36).substr(2, 9),
     // Last time vectors were calculated, [s]
     protected lastUpdated: number = Date.now() / 1000,
-  ) {
-    this.name = id;
-  }
+  ) { }
 
   get parent() {
     return this._parent;
@@ -398,5 +397,38 @@ export default class Body {
 
   static loadNew(data: any): Body {
     return new Body(data.id || undefined, data.updated || 0).load(data);
+  }
+
+  // ----------------
+  // Graphics section
+  // ----------------
+
+  // Body's mesh to draw in world view
+  public mesh?: Mesh;
+
+  setScene(scene: Scene, posCache?: Map<string, Vector3>) {
+    if (!this.mesh) {
+      this.mesh = new Mesh();
+      this.mesh.name = this.name;
+      scene.add(this.mesh);
+
+      if ((this.mass > 1e10) || (this.radius > 1e5)) {
+        this.mesh.geometry = new SphereBufferGeometry(this.radius, 16, 16);
+      } else {
+        this.mesh.geometry = new BoxBufferGeometry(1e5, 1e5, 1e5);
+      }
+
+      const color = (this.mass > 1e29) ? 0xffff00 : (this.mass > 1e24) ? 0x0077ff : (this.mass > 1e10) ? 0xaaaaaa : 0xffffff;
+      this.mesh.material = new MeshBasicMaterial({ color });
+
+      if (this.id == 'earth') {
+        World.Instance.focus = this;
+      }
+    }
+
+    this.mesh.up = this.axisAbsolute;
+    this.mesh.position.copy(this.getAbsolutePosition(posCache));
+    // TODO: get the absolute rotation
+    this.mesh.rotation.copy(this.rotation);
   }
 }

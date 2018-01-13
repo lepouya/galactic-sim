@@ -5,7 +5,7 @@ import World from '../model/World';
 
 export default class Main extends React.Component<RouteComponentProps<any>> {
   componentDidMount() {
-    World.Instance.onWindowResize();
+    World.Instance.resizeWindow();
     ReactDOM.findDOMNode(this).appendChild(World.Instance.renderer.domElement);
   }
 

@@ -14,10 +14,11 @@ Milestone 2
 [x] Switching between orbital predictions and simulations
 [x] Time warping
 [x] FPS calculations
-[ ] 3D rendering of a scene
-[ ] Frequent saving
+[x] 3D rendering of a scene
+[ ] World and focus views
 
 Milestone 3
+[ ] Frequent saving
 [ ] Non-gravitational objects
 [ ] Collision detection
 [ ] Switching spheres of influence
