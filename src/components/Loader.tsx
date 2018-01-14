@@ -4,6 +4,7 @@ import Spinner from './Spinner';
 import Game from './Game';
 import bind from '../utils/bind';
 import World from '../model/World';
+import WorldScene from '../graphics/WorldScene';
 
 interface LoaderState {
   loaded: boolean;
@@ -21,13 +22,13 @@ export default class Loader extends React.Component<{}, LoaderState> {
 
   @bind
   async load() {
-    const world = World.Instance;
-
-    world.initRenderer();
+    const world = new World(0);
     world.loadFromLocalStorage();
     if (world.children.size == 0) {
       world.load(require('../data/solar_system'));
     }
+
+    new WorldScene();
 
     this.setState({ loaded: true });
   }

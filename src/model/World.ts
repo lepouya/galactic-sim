@@ -1,8 +1,6 @@
-import { Vector3, Scene, PerspectiveCamera, WebGLRenderer } from 'three';
+import { Vector3 } from 'three';
 import Body from './Body';
 import approximately from '../utils/approximately';
-import bind from '../utils/bind';
-import unit from '../utils/unit';
 
 function _storageAvailable() {
   const storage = window.localStorage;
@@ -38,25 +36,19 @@ export default class World {
     SimLevel: Body.SimulationLevel.TwoBody,
     TickDelta: 0.1,
     MaxTicks: 1000,
-
-    FOV: 75,
-    NearPlane: 0.1,
-    FarPlane: unit.ly,
   }
+
+  public static Instance: World;
 
   constructor(
     public lastUpdated: number = Date.now() / 1000,
-  ) { }
-
-  static Instance = new World();
-
-  // ---------------
-  // Physics section
-  // ---------------
+  ) {
+    World.Instance = this;
+  }
 
   public readonly children = new Set<Body>();
-  private bodies = this.getAllChildren();
-  private posCache = new Map<string, Vector3>();
+  readonly posCache = new Map<string, Vector3>();
+  bodies = this.getAllChildren();
 
   getAllChildren(map = new Map<Body, number>(), children = this.children) {
     children.forEach(body => {
@@ -161,70 +153,5 @@ export default class World {
       }
     }
     return this;
-  }
-
-  // ----------------
-  // Graphics section
-  // ----------------
-
-  public scene: Scene;
-  public camera: PerspectiveCamera;
-  public renderer: WebGLRenderer;
-
-  public focus?: Body;
-
-  initRenderer() {
-    if (this.scene || this.camera || this.renderer) {
-      return;
-    }
-
-    this.renderer = new WebGLRenderer({
-      antialias: true,
-      logarithmicDepthBuffer: true,
-    });
-
-    this.camera = new PerspectiveCamera(
-      World.Default.FOV,
-      window.innerWidth / window.innerHeight,
-      World.Default.NearPlane,
-      World.Default.FarPlane);
-
-    this.scene = new Scene();
-
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.resizeWindow();
-    this.animate();
-
-    window.addEventListener('resize', this.resizeWindow, false);
-  }
-
-  @bind
-  animate() {
-    requestAnimationFrame(this.animate);
-
-    if (this.focus) {
-      const focusPoint = this.focus.getAbsolutePosition(this.posCache);
-      this.camera.position.copy(focusPoint).setLength(focusPoint.length() + this.focus.radius * 10).addScalar(this.focus.radius);
-      this.camera.lookAt(focusPoint);
-      this.camera.updateProjectionMatrix();
-    }
-
-    this.bodies.forEach((_, body) => body.setScene(this.scene, this.posCache));
-
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  @bind
-  resizeWindow() {
-    let width = window.innerWidth, height = window.innerHeight;
-
-    const navBar = document.getElementById('navBar');
-    if (navBar) {
-      height -= navBar.clientHeight;
-    }
-
-    this.renderer.setSize(width, height);
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
   }
 }
