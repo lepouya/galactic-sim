@@ -12,7 +12,7 @@ export const data = {
       "parent": "sun",
       "mass": 5.972e+24,
       "radius": 6.371e+6,
-      // Axis tilt: 23.4 degrees
+      "axis": [0, Math.cos(23.4 * Math.PI / 180), -Math.sin(23.4 * Math.PI / 180)],
       "orbit": {
         "semiMajorAxis": 1.496e+11,
         "eccentricity": 0.0167,
@@ -28,12 +28,12 @@ export const data = {
       "parent": "earth",
       "mass": 7.347e+22,
       "radius": 1.737e+6,
-      // Axis tilt: -23.4-1.54
+      "axis": [0, Math.cos(24.94 * Math.PI / 180), Math.sin(24.94 * Math.PI / 180)],
       "orbit": {
         "semiMajorAxis": 3.844e+8,
         "eccentricity": 0.05496,
         "inclination": 0.31904619,
-        "longitudeOfAscendingNode": 2.1831,
+        "longitudeOfAscendingNode": 3.14159,//2.1831,
         "argumentOfPeriapsis": 5.5528,
         "meanAnomaly": 0
       }

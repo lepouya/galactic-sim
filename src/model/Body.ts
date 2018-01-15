@@ -1,4 +1,4 @@
-import { Vector3, Euler, Mesh } from 'three';
+import { Vector3, Euler } from 'three';
 import Force from '../utils/Force';
 import Orbit from '../utils/Orbit';
 import approximately from '../utils/approximately';
@@ -15,9 +15,9 @@ export default class Body {
 
   // Main axis relative to parent axis, normalized, defines "up"
   private _axis = new Vector3(0, 1, 0);
-  protected axisAbsolute = new Vector3(0, 1, 0);
-  protected axisNormal = new Vector3();
-  protected axisAngle = 0.0;
+  axisAbsolute = new Vector3(0, 1, 0);
+  axisNormal = new Vector3();
+  axisAngle = 0.0;
 
   // Central position relative to parent's position and axis, [m^3]
   public position = new Vector3();
@@ -37,13 +37,10 @@ export default class Body {
   // Distance of surface from body's position, [m]
   public radius = 0;
 
-  protected factorSOI?: number;
+  factorSOI?: number;
 
   // Bodies under sphere of influence of this body
   public readonly children = new Set<Body>();
-
-  // Body's mesh to draw in world view
-  public mesh?: Mesh;
 
   constructor(
     // Unique identifier for this body

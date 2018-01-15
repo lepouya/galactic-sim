@@ -15,7 +15,9 @@ Milestone 2
 [x] Time warping
 [x] FPS calculations
 [x] 3D rendering of a scene
+[x] Visualization of orbits and paths
 [ ] World and focus views
+[ ] LOD
 
 Milestone 3
 [ ] Frequent saving

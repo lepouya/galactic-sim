@@ -3,6 +3,7 @@ import bind from '../utils/bind';
 import unit from '../utils/unit';
 import Body from '../model/Body';
 import World from '../model/World';
+import BodyMeshes from './BodyMeshes';
 
 export default class WorldScene {
   static Default = {
@@ -14,6 +15,8 @@ export default class WorldScene {
   public scene: THREE.Scene;
   public camera: THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
+
+  public bodyMeshes = new Map<string, BodyMeshes>();
 
   public focus?: Body;
 
@@ -53,8 +56,8 @@ export default class WorldScene {
     if (this.focus) {
       const focusPoint = this.focus.getAbsolutePosition(this.world.posCache);
       this.camera.position.copy(focusPoint)
-        .setLength(focusPoint.length() + this.focus.radius * 75)
-        .addScalar(this.focus.radius);
+        .setLength(focusPoint.length() + this.focus.radius * 50)
+        .add(new THREE.Vector3(this.focus.radius, this.focus.radius, this.focus.radius * 40));
       this.camera.lookAt(focusPoint);
       this.camera.updateProjectionMatrix();
     }
@@ -77,28 +80,13 @@ export default class WorldScene {
   }
 
   setBody(body: Body) {
-    if (!body.mesh) {
-      const mesh = new THREE.Mesh();
-      body.mesh = mesh;
-      mesh.name = body.name;
-      this.scene.add(mesh);
-
-      if ((body.mass > 1e10) || (body.radius > 1e5)) {
-        mesh.geometry = new THREE.SphereBufferGeometry(body.radius, 64, 64);
-      } else {
-        mesh.geometry = new THREE.BoxBufferGeometry(body.radius, body.radius, body.radius);
-      }
-
-      const color = (body.mass > 1e29) ? 0xffff00 : (body.mass > 1e24) ? 0x0077ff : (body.mass > 1e10) ? 0xaaaaaa : 0xffffff;
-      mesh.material = new THREE.MeshBasicMaterial({ color });
-
+    if (!this.bodyMeshes.has(body.id)) {
+      this.bodyMeshes.set(body.id, new BodyMeshes(body));
       if (body.id == 'earth') {
         this.focus = body;
       }
     }
 
-    body.mesh.position.copy(body.getAbsolutePosition(this.world.posCache));
-    // TODO: get the absolute rotation
-    body.mesh.rotation.copy(body.rotation);
+    this.bodyMeshes.get(body.id)!.updatePosition();
   }
 }

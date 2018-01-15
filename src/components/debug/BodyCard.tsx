@@ -23,7 +23,6 @@ export default class BodyCard extends React.Component<Props> {
         {fact('name', body.name)}
         {fact('position', unit.print(body.position, unit.distance))}
         {fact('velocity', unit.print(body.velocity, unit.speed))}
-        {fact('abs pos', unit.print(body.getAbsolutePosition()))}
         {fact('semi-major axis', unit.print(orbit.semiMajorAxis, unit.distance))}
         {fact('eccentricity', unit.print(orbit.eccentricity))}
         {fact('inclination', unit.print(orbit.inclination, unit.angle))}
@@ -34,6 +33,8 @@ export default class BodyCard extends React.Component<Props> {
         {fact('apoapsis', unit.print(orbit.extras.apoapsis, unit.distance))}
         {fact('period', unit.print(orbit.extras.period, unit.time))}
         {fact('SOI', unit.print(body.sphereOfInfluence, unit.distance))}
+        {fact('abs pos', unit.print(body.getAbsolutePosition()))}
+        {fact('abs axis', unit.print(body.axisAbsolute))}
       </div>
     );
   }
