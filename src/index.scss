@@ -1,7 +1,13 @@
+$navbar-nav-item-height: 2em;
+
+@import 'variables-theme';
+@import 'mixins-theme';
+@import 'uikit-theme';
+
 html, body {
   margin: 0;
   height: 100%;
-  //overflow: hidden
+  overflow: hidden
 }
 
 canvas {
@@ -17,4 +23,5 @@ main {
 
 .clock-button {
   margin: 0.2rem 0.2rem 0 0;
+  padding: 0;
 }

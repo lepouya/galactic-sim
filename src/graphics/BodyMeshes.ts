@@ -11,7 +11,7 @@ export default class BodyMeshes {
   public particle: THREE.Points;
 
   // Orbit of the body
-  public orbit: THREE.Line;
+  public orbit?: THREE.Line;
 
   // Body's axis
   public axis: THREE.Line;

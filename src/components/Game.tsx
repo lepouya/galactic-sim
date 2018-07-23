@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Link, Route, Switch } from 'react-router-dom';
+import { HashRouter, NavLink, Route, Switch } from 'react-router-dom';
 import bind from '../utils/bind';
 
 import Main from '../pages/Main';
@@ -65,27 +65,25 @@ export default class Game extends React.Component<GameProps, GameState> {
     return (
       <HashRouter>
         <div>
-          <header>
-            <div className="top-bar" id="navBar" style={{padding: 0}}>
-              <div className="top-bar-left">
-                <ul className="menu">
-                  <li><Link to="/">Camera</Link></li>
-                  <li><Link to="/help">Help</Link></li>
-                  <li><Link to="/debug">Debug</Link></li>
-                </ul>
-              </div>
-              <div className="top-bar-right">
-                <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
-              </div>
+          <nav className="uk-navbar-container" uk-navbar="">
+            <div className="uk-navbar-left">
+              <ul className="uk-navbar-nav">
+                <li><NavLink activeClassName="uk-active" exact to="/">Camera</NavLink></li>
+                <li><NavLink activeClassName="uk-active" to="/help">Help</NavLink></li>
+                <li><NavLink activeClassName="uk-active" to="/debug">Debug</NavLink></li>
+              </ul>
             </div>
-          </header>
-          <main>
-            <Switch>
-              <Route exact path="/" component={Main} />
-              <Route path="/help" component={Help} />
-              <Route path="/debug" component={Debug} />
-            </Switch>
-          </main>
+            <div className="uk-navbar-right">
+              <ul className="uk-navbar-nav">
+                <Clock lastUpdate={this.state.lastUpdate} warp={this.state.warp} setWarp={this.setWarp} />
+              </ul>
+            </div>
+          </nav>
+          <Switch>
+            <Route exact path="/" component={Main} />
+            <Route path="/help" component={Help} />
+            <Route path="/debug" component={Debug} />
+          </Switch>
         </div>
       </HashRouter>
     );

@@ -25,7 +25,15 @@ export default class Orbit {
     public meanAnomaly: number,
   ) { }
 
-  public extras: OrbitalExtras;
+  public extras: OrbitalExtras = {
+    trueAnomaly: NaN,
+    eccentricAnomaly: NaN,
+    trueLongitude: NaN,
+    periapsis: NaN,
+    apoapsis: NaN,
+    period: NaN,
+    meanAngularMotion: NaN,
+  };
 
   /**
    * Convert Cartesian orbital state to Kepler elements

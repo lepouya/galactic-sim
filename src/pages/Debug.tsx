@@ -9,10 +9,8 @@ export default class Debug extends React.Component<RouteComponentProps<any>> {
     const bodies = Array.from(World.Instance.getAllChildren().keys());
 
     return (
-      <div className="grid-container">
-        <div className="grid-x grid-margin-x grid-margin-y">
-          {bodies.map(body => <BodyCard body={body} key={body.id} />)}
-        </div>
+      <div className="uk-child-width-1-3@s uk-grid-match uk-flex uk-flex-left uk-text-left" uk-grid="">
+        {bodies.map(body => <BodyCard body={body} key={body.id} />)}
       </div>
     );
   }

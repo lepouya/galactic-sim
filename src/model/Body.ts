@@ -47,7 +47,9 @@ export default class Body {
     public readonly id = Math.random().toString(36).substr(2, 9),
     // Last time vectors were calculated, [s]
     protected lastUpdated: number = Date.now() / 1000,
-  ) { }
+  ) {
+    this.name = id;
+  }
 
   get parent() {
     return this._parent;

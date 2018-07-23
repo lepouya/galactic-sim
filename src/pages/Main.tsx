@@ -6,8 +6,12 @@ import WorldScene from '../graphics/WorldScene';
 export default class Main extends React.Component<RouteComponentProps<any>> {
   componentDidMount() {
     const scene = WorldScene.Instance;
+    const domNode = ReactDOM.findDOMNode(this);
     scene.resizeWindow();
-    ReactDOM.findDOMNode(this).appendChild(scene.renderer.domElement);
+
+    if (domNode) {
+      domNode.appendChild(scene.renderer.domElement);
+    }
   }
 
   render() {

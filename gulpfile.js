@@ -19,20 +19,23 @@ const vendor = 'vendor';
 const htmlEntries = ['src/index.pug'];
 const cssEntries = ['src/index.scss'];
 const jsEntries = ['src/index.tsx'];
-const externalLibs = ['react', 'react-dom', 'react-router', 'react-router-dom', 'three'];
+const externalLibs = ['react', 'react-dom', 'react-router', 'react-router-dom', 'three', 'uikit'];
 const extensions = ['.js', '.ts', '.jsx', '.tsx', '.json'];
 
-gulp.task('prod', function () {
+gulp.task('prod', function (done) {
   process.env.NODE_ENV = 'production';
+  done();
 });
 
-gulp.task('dev', function () {
+gulp.task('dev', function (done) {
   process.env.NODE_ENV = 'development';
+  done();
 });
 
-gulp.task('watching', function () {
+gulp.task('watching', function (done) {
   process.env.NODE_ENV = 'development';
   process.env.watching = true;
+  done();
 });
 
 gulp.task('html', function () {
@@ -61,7 +64,7 @@ gulp.task('sass', function () {
   return gulp
     .src(cssEntries)
     .pipe(sass({
-      includePaths: ['node_modules/foundation-sites/scss'],
+      includePaths: ['node_modules/uikit/src/scss'],
       outputStyle: (debug ? 'expanded' : 'compressed'),
       outFile: cssName,
     }))
@@ -113,11 +116,11 @@ gulp.task('server', function () {
   });
 });
 
-gulp.task('compile', ['html', 'sass', 'vendor', 'ts'], function () {});
-gulp.task('release', ['prod', 'compile'], function () {});
-gulp.task('debug', ['dev', 'compile'], function () {});
-gulp.task('watch', ['watching', 'compile'], function () {});
-gulp.task('start', ['watch', 'server'], function () {});
+gulp.task('compile', gulp.parallel('html', 'sass', 'vendor', 'ts'));
+gulp.task('release', gulp.series('prod', 'compile'));
+gulp.task('debug', gulp.series('dev', 'compile'));
+gulp.task('watch', gulp.series('watching', 'compile'));
+gulp.task('start', gulp.series('watch', 'server'));
 
 var bundler = null;
 
